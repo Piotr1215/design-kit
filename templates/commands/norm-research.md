@@ -92,6 +92,70 @@ Prove [component X] works reliably in isolation with automated validation.
 - [Library/tool name 2]
 - [Testing framework for validation]
 
+## CRITICAL: Check Memory for Proven Test Harness Patterns
+
+**BEFORE setting up a new test harness, check if Memory MCP has proven patterns:**
+
+```bash
+# Search memory for test harness guides
+# Examples: "playwright setup", "jest harness", "pytest setup", "cypress setup"
+```
+
+**If Memory MCP available:**
+1. Search for: `[tech-stack] quick setup guide` or `[tech-stack] test harness`
+2. Example queries: "Playwright quick setup", "Jest configuration", "Pytest harness", "Cypress setup"
+3. Follow proven steps from memory to avoid common pitfalls
+4. Memory contains step-by-step guides like `Playwright_Quick_Setup_Guide`
+
+**If you create a NOVEL test harness (not in memory):**
+
+**YOU MUST add your setup steps to memory using Memory MCP:**
+
+Create memory entity with pattern: `[Tech]_Quick_Setup_Guide`
+
+**Required format:**
+- Entity name: `[Technology]_Quick_Setup_Guide` (e.g., `Playwright_Quick_Setup_Guide`, `Jest_Quick_Setup_Guide`)
+- Entity type: `development_guide`
+- Observations: Step-by-step setup instructions (GENERIC, not project-specific)
+
+**Example observation format:**
+```
+Quick setup guide for [Technology] test harness - follow these steps in order
+1. Create directories: mkdir -p [structure]
+2. Install dependencies: [exact commands]
+3. Create config file: [filename with essential config]
+4. Create first test: [minimal working example]
+5. Run single test first: [command with --debug/--headed flag]
+6. Run all tests: [command] (only after single test works!)
+7. View results: [how to check output]
+8. Docs: [official docs URL]
+Key config options: [explain critical settings]
+CRITICAL: [key gotcha or debugging tip]
+Network/debug commands: [if applicable]
+```
+
+**What makes a GOOD memory entry:**
+- ✅ GENERIC steps that work across projects
+- ✅ Exact commands (copy-paste ready)
+- ✅ Minimal working example
+- ✅ Debug/verify steps ("run ONE test first with --headed")
+- ✅ Common gotchas and fixes
+- ✅ Links to official docs
+- ❌ NOT project-specific paths/config
+- ❌ NOT implementation details
+- ❌ NOT full test suite code
+
+**Why this matters:**
+- Saves hours for future agents setting up same tech stack
+- Captures proven approaches (not trial-and-error)
+- Builds collective knowledge base
+- Enables rapid test harness setup across projects
+
+**After adding to memory:**
+- Verify with memory search to ensure it's discoverable
+- Use clear, searchable entity names
+- Include technology name in observations for search matching
+
 ## Deliverable
 
 Working proof in `.claude/specs/$BRANCH/proofs/[component-name]/` with:

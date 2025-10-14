@@ -93,6 +93,7 @@ Each component must be:
 
 For each component:
 - Design EFFECTIVE testing strategy first (what can go wrong in YOUR use case?)
+- **CHECK MEMORY MCP** for proven test harness setups (e.g., `Playwright_Quick_Setup_Guide`)
 - Implement test harness (run.sh)
 - **Develop tests INCREMENTALLY:**
   - Start with ONE happy-path test
@@ -101,10 +102,13 @@ For each component:
   - Build confidence iteratively until reliability requirements met
 - Collect results (pass/fail logs, metrics)
 - THEN write docs based on empirical evidence
+- **ADD TO MEMORY** if you created a novel test harness (save future agents hours of setup)
 
 **Focus on test design quality and incremental development over arbitrary test counts.**
 
 **Real Engineering**: Research within guardrails → test iteratively → validate → integrate → iterate based on findings.
+
+**Knowledge Sharing**: Agents MUST check memory for proven patterns BEFORE setup, and ADD novel harnesses TO memory AFTER creation.
 
 ## Success Criteria
 

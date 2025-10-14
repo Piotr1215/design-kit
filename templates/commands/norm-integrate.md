@@ -50,6 +50,7 @@ fi
 4. Read all `proofs/*/FEEDBACK.md` - discoveries and gotchas
 5. Check CLAUDE.md for repo conventions
 6. Scan actual codebase to understand current implementation
+7. **CHECK MEMORY MCP** for proven test harness patterns to reuse Phase 1 harness
 
 ## Task Generation Rules
 
@@ -140,6 +141,9 @@ Integrate proven [component] from Phase 1 into [target system].
 - New [dependencies, config files]
 - Integration test results with REAL system data
 - **Regression test report**: Re-ran Phase 1 harness with real data
+  - Copy Phase 1 test harness to project root
+  - Update to target REAL system endpoints (not mocks)
+  - If Memory MCP has setup guide for this tech, follow it for quick setup
 - README.md section: [documentation updates]
 - INTEGRATION-ISSUES.md (if contract gaps found)
 
