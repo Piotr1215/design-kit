@@ -5,6 +5,9 @@ description: "Generate Phase 2 integration tasks (project, gitignored)"
 
 Generate Phase 2 integration tasks that connect proven components to the actual system.
 
+**CRITICAL**: Integration is ITERATIVE. It often uncovers issues not found in isolation.
+Going back to Phase 1 for refinement is NORMAL and EXPECTED in real engineering.
+
 ## Setup
 
 ```bash

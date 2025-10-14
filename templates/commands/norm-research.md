@@ -50,7 +50,7 @@ Example:
 - `TASK-P1-B-auth-middleware.md`
 - `TASK-P1-C-graphql-parser.md`
 
-### Task Template (20-40 lines max)
+### Task Template (Keep concise and focused)
 
 ```markdown
 # TASK-P1-[X]-[Component]
@@ -58,16 +58,27 @@ Example:
 ## Goal
 Prove [component X] works reliably in isolation with automated validation.
 
-## PRIMARY OBJECTIVE: Design MINIMAL Testing Strategy
+## PRIMARY OBJECTIVE: Design EFFECTIVE Testing Strategy
 
-**BEFORE implementing, determine HOW to test this component (keep it simple):**
-- How will we validate correctness automatically? (pick ONE validation tool/library)
-- What metrics define success? (1-2 key metrics, not 10)
-- What edge cases must be covered? (list 3-5 critical scenarios)
-- **If you cannot devise testing strategy, STOP and report to user immediately.**
+**BEFORE implementing, design tests that will actually stress YOUR system:**
 
-**Goal**: Get validation working quickly, THEN expand test coverage.
-**NOT**: Design elaborate 7-layer validation architecture before running any tests.
+**1. Understand What Can Go Wrong:**
+- What invariants MUST hold true? (e.g., auth token never leaks, data never corrupts)
+- What are failure modes specific to THIS component? (timeouts, race conditions, memory leaks)
+- What edge cases are unique to YOUR use case? (not generic happy-path scenarios)
+
+**2. Design Tests That Reveal Problems:**
+- How will we detect violations of invariants? (automated assertions, monitoring)
+- What conditions expose failure modes? (concurrent requests, slow networks, large data)
+- Pick ONE validation tool/library that can verify these conditions
+
+**3. Determine "Done" Criteria:**
+- What pass rate indicates reliability for YOUR requirements? (critical system = higher bar)
+- How many test runs validate consistency? (based on how random/timing-sensitive the component is)
+- Document your rationale in TESTING.md (not arbitrary numbers)
+
+**CRITICAL**: A great testing approach is more valuable than running arbitrary test counts.
+**If you cannot design meaningful tests that stress the system, STOP and report to user immediately.**
 
 ## What to Explore
 
@@ -85,21 +96,39 @@ Prove [component X] works reliably in isolation with automated validation.
 
 Working proof in `.claude/specs/$BRANCH/proofs/[component-name]/` with:
 
-**Order matters - complete tests BEFORE writing docs:**
-- [ ] Automated test harness implemented (run.sh)
-- [ ] **Test Harness Contract implemented:**
-  - [ ] run.sh exits 0 on success, 1 on any failure
-  - [ ] results/summary.json generated (timestamp, total, passed, failed, pass_rate, failures[])
-  - [ ] results/logs/*.json contain individual test details
-- [ ] **100+ test cases EXECUTED** (not just planned!) across diverse scenarios
-- [ ] Edge cases for YOUR use case tested (not generic happy-path)
-- [ ] Tested 2+ approaches, picked ONE winner with rationale
-- [ ] Zero failures in last 50 consecutive runs
-- [ ] **THEN write docs from test data:**
-- [ ] TESTING.md ≤50 lines (how to run, what's validated, pass criteria from empirical data)
-- [ ] CONTRACT.md ≤100 lines (API + gotchas discovered during testing)
-- [ ] FEEDBACK.md ≤30 lines (design choices + surprises learned from test results)
-- [ ] README.md ≤30 lines (quick start, dependencies)
+**CRITICAL: Incremental Test Development (NOT batch testing):**
+
+1. **Start Simple - Happy Path First:**
+   - [ ] Set up test harness (run.sh exits 0/1, generates results/summary.json, results/logs/*.json)
+   - [ ] Write ONE basic happy-path test
+   - [ ] Make it pass
+   - [ ] Verify test harness works end-to-end
+
+2. **Build Iteratively - Add One Test at a Time:**
+   - [ ] Identify next most important scenario (edge case, failure mode, invariant check)
+   - [ ] Write ONE new test
+   - [ ] Run ALL tests (catch regressions immediately)
+   - [ ] Make new test pass
+   - [ ] REPEAT until confidence achieved
+
+3. **Research Multiple Approaches:**
+   - [ ] Test at least 2 different approaches/libraries using same iterative method
+   - [ ] Compare tradeoffs based on empirical test results
+   - [ ] Pick ONE winner with documented rationale
+
+4. **Validate Reliability:**
+   - [ ] Run full test suite multiple times to validate consistency
+   - [ ] Document acceptable pass rate in TESTING.md (based on requirements, not arbitrary)
+   - [ ] Achieve target reliability for YOUR use case
+
+5. **THEN Document from Empirical Evidence:**
+   - [ ] TESTING.md (how to run, what's validated, pass criteria from test data)
+   - [ ] CONTRACT.md (API/interface + gotchas discovered during testing)
+   - [ ] FEEDBACK.md (design choices + surprises learned from test results)
+   - [ ] README.md (quick start, dependencies)
+
+**Anti-Pattern**: Writing 100+ tests then running them all at once (no regression detection)
+**Correct**: Write 1 test → run ALL tests → repeat (catch regressions early)
 
 ## Edge Cases for YOUR Use Case
 
@@ -118,7 +147,7 @@ All checkboxes above are complete with empirical evidence.
 
 For each component in PLAN.md:
 1. Create one TASK-P1-*.md file in `.claude/specs/$BRANCH/tasks/`
-2. Keep each task 20-40 lines
+2. Keep each task concise and focused (as brief as needed to convey requirements)
 3. Emphasize testing strategy upfront
 4. Ensure 100% parallelism (no cross-task dependencies)
 5. Focus on WHAT to prove, not HOW to code it
@@ -127,9 +156,10 @@ For each component in PLAN.md:
 
 ❌ Creating dependencies between tasks
 ❌ Including implementation code in task files
-❌ Making tasks longer than one screen (40 lines max)
+❌ Making tasks unnecessarily verbose
 ❌ Allowing manual validation (must be automated)
 ❌ Forgetting the Test Harness Contract (summary.json + logs/)
+❌ Specifying arbitrary test counts ("100+ tests") - let requirements drive coverage
 
 ## Verification
 
@@ -137,13 +167,14 @@ After generating tasks, ask yourself:
 - ✅ Can all tasks start simultaneously?
 - ✅ Does each task use generic test data?
 - ✅ Is testing strategy clearly defined?
-- ✅ Are tasks short and focused (20-40 lines)?
+- ✅ Are tasks concise and focused?
+- ✅ Are test coverage targets based on requirements, not arbitrary numbers?
 
 ## Next Steps
 
 After tasks are generated:
 - Agent(s) execute Phase 1 tasks independently
-- Each produces CONTRACT.md + TESTING.md + 100+ test runs
+- Each produces CONTRACT.md + TESTING.md + sufficient test runs to validate requirements
 - Review all FEEDBACK.md files
 - Update PLAN.md if discoveries warrant changes
 - Then run `/norm-integrate` for Phase 2
