@@ -64,7 +64,7 @@ BANNER = """
 ╚══════╝╚═╝     ╚══════╝ ╚═════╝╚═╝╚═╝        ╚═╝   
 """
 
-TAGLINE = "Spec-Driven Development Toolkit"
+TAGLINE = "Design-Driven Development Toolkit"
 class StepTracker:
     """Track and render hierarchical steps without emojis, similar to Claude Code tree output.
     Supports live auto-refresh via an attached refresh callback.
@@ -277,7 +277,7 @@ class BannerGroup(TyperGroup):
 
 app = typer.Typer(
     name="specify",
-    help="Setup tool for Specify spec-driven development projects",
+    help="Setup tool for Specify design-driven development projects",
     add_completion=False,
     invoke_without_command=True,
     cls=BannerGroup,
@@ -390,7 +390,7 @@ def download_template_from_github(ai_assistant: str, download_dir: Path, *, verb
     Returns (zip_path, metadata_dict)
     """
     repo_owner = "github"
-    repo_name = "spec-kit"
+    repo_name = "design-kit"
     
     if verbose:
         console.print("[cyan]Fetching latest release information...[/cyan]")
@@ -406,7 +406,7 @@ def download_template_from_github(ai_assistant: str, download_dir: Path, *, verb
         raise typer.Exit(1)
     
     # Find the template asset for the specified AI assistant
-    pattern = f"spec-kit-template-{ai_assistant}"
+    pattern = f"design-kit-template-{ai_assistant}"
     matching_assets = [
         asset for asset in release_data.get("assets", [])
         if pattern in asset["name"] and asset["name"].endswith(".zip")

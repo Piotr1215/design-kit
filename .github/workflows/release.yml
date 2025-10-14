@@ -143,19 +143,19 @@ jobs:
         echo "Created GitHub Copilot package"
         
         # Create archive files for each package
-        cd sdd-claude-package && zip -r ../spec-kit-template-claude-${{ steps.get_tag.outputs.new_version }}.zip . && cd ..
-        
-        cd sdd-gemini-package && zip -r ../spec-kit-template-gemini-${{ steps.get_tag.outputs.new_version }}.zip . && cd ..
-        
-        cd sdd-copilot-package && zip -r ../spec-kit-template-copilot-${{ steps.get_tag.outputs.new_version }}.zip . && cd ..
-        
+        cd sdd-claude-package && zip -r ../design-kit-template-claude-${{ steps.get_tag.outputs.new_version }}.zip . && cd ..
+
+        cd sdd-gemini-package && zip -r ../design-kit-template-gemini-${{ steps.get_tag.outputs.new_version }}.zip . && cd ..
+
+        cd sdd-copilot-package && zip -r ../design-kit-template-copilot-${{ steps.get_tag.outputs.new_version }}.zip . && cd ..
+
         # List contents for verification
         echo "Claude package contents:"
-        unzip -l spec-kit-template-claude-${{ steps.get_tag.outputs.new_version }}.zip | head -10
+        unzip -l design-kit-template-claude-${{ steps.get_tag.outputs.new_version }}.zip | head -10
         echo "Gemini package contents:"
-        unzip -l spec-kit-template-gemini-${{ steps.get_tag.outputs.new_version }}.zip | head -10
+        unzip -l design-kit-template-gemini-${{ steps.get_tag.outputs.new_version }}.zip | head -10
         echo "Copilot package contents:"
-        unzip -l spec-kit-template-copilot-${{ steps.get_tag.outputs.new_version }}.zip | head -10
+        unzip -l design-kit-template-copilot-${{ steps.get_tag.outputs.new_version }}.zip | head -10
         
     - name: Generate release notes
       if: steps.check_release.outputs.exists == 'false'
@@ -178,13 +178,13 @@ jobs:
         # Create release notes
         cat > release_notes.md << EOF
         Template release ${{ steps.get_tag.outputs.new_version }}
-        
-        Updated specification-driven development templates for GitHub Copilot, Claude Code, and Gemini CLI.
-        
+
+        Updated design-driven development templates for GitHub Copilot, Claude Code, and Gemini CLI.
+
         Download the template for your preferred AI assistant:
-        - spec-kit-template-copilot-${{ steps.get_tag.outputs.new_version }}.zip
-        - spec-kit-template-claude-${{ steps.get_tag.outputs.new_version }}.zip
-        - spec-kit-template-gemini-${{ steps.get_tag.outputs.new_version }}.zip  
+        - design-kit-template-copilot-${{ steps.get_tag.outputs.new_version }}.zip
+        - design-kit-template-claude-${{ steps.get_tag.outputs.new_version }}.zip
+        - design-kit-template-gemini-${{ steps.get_tag.outputs.new_version }}.zip
         EOF
         
         echo "Generated release notes:"
