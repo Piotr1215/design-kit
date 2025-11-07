@@ -169,12 +169,12 @@ cat .claude/specs/feature-auth-improvements/proofs/*/FEEDBACK.md
 
 ## Anti-Patterns
 
-❌ Creating Phase 1 dependencies (breaks parallelism)
-❌ Writing 1000-line docs before running tests
-❌ Using real system data in Phase 1 (use generic/sample data)
-❌ Phase 2 referencing proof internals (use CONTRACT.md only)
-❌ Skipping Phase 1 harness re-run in Phase 2
-❌ Manual validation (must be automated)
+- ❌ Creating Phase 1 dependencies (breaks parallelism)
+- ❌ Writing 1000-line docs before running tests
+- ❌ Using real system data in Phase 1 (use generic/sample data)
+- ❌ Phase 2 referencing proof internals (use CONTRACT.md only)
+- ❌ Skipping Phase 1 harness re-run in Phase 2
+- ❌ Manual validation (must be automated)
 
 ## Files
 
