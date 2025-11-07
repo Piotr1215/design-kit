@@ -139,7 +139,6 @@ jobs:
         echo "Claude: $(ls -lh design-kit-template-claude-*.zip | awk '{print $5}')"
         echo "Gemini: $(ls -lh design-kit-template-gemini-*.zip | awk '{print $5}')"
         echo "Copilot: $(ls -lh design-kit-template-copilot-*.zip | awk '{print $5}')"
-        echo "Copilot: $(ls -lh sdd-template-copilot-*.zip | awk '{print $5}')"
         
     - name: Generate detailed release notes
       run: |
