@@ -1,20 +1,40 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Minimal install - just copy command templates
-# Always overwrites to get latest version
+# Design-Kit Installation Script
+# Installs command templates and helper scripts to ~/.claude/
 
-echo "Installing Design-Kit Commands..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Design-Kit Installer"
+echo "  Test-Driven Parallel Development Framework"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Check prerequisites
+if ! command -v git &> /dev/null; then
+    echo "❌ ERROR: git is not installed. Please install git first."
+    exit 1
+fi
+
+echo "📦 Installing Design-Kit..."
+echo ""
 
 # Create directories if needed
+echo "  → Creating directories in ~/.claude/"
 mkdir -p ~/.claude/commands
 mkdir -p ~/.claude/design-kit
 
 # Copy command templates (always overwrite for updates)
+echo "  → Installing command templates..."
 cp -f templates/commands/*.md ~/.claude/commands/
+echo "     ✓ /norm-plan"
+echo "     ✓ /norm-research"
+echo "     ✓ /norm-integrate"
 
 # Copy auto-connect-design.sh to design-kit directory
+echo "  → Installing helper scripts..."
 cp -f scripts/auto-connect-design.sh ~/.claude/design-kit/
+echo "     ✓ auto-connect-design.sh"
 
 # Create init.sh script (branch-based, norm approach)
 cat > ~/.claude/design-kit/init.sh << 'EOF'
@@ -73,19 +93,31 @@ EOF
 
 # Make init.sh executable
 chmod +x ~/.claude/design-kit/init.sh
+echo "     ✓ init.sh"
 
-echo "✅ Installed Design-Kit!"
 echo ""
-echo "Commands available:"
-echo "  /norm-plan     - Create master plan with phases"
-echo "  /norm-research - Generate Phase 1 parallel proof tasks"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ✅ Design-Kit Successfully Installed!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "📋 Available Commands:"
+echo "  /norm-plan      - Create master plan with phases"
+echo "  /norm-research  - Generate Phase 1 parallel proof tasks"
 echo "  /norm-integrate - Generate Phase 2 integration tasks"
 echo ""
-echo "Philosophy:"
-echo "  • Test-driven: 100+ tests before docs"
-echo "  • Parallel execution: Independent proofs"
-echo "  • Contract-based: Black-box integration"
+echo "💡 Quick Start:"
+echo "  1. Navigate to your project directory"
+echo "  2. Create a feature branch: git checkout -b feature/my-feature"
+echo "  3. Start planning: /norm-plan \"Your project description\""
 echo ""
-echo "Manual tools in design-kit/scripts/:"
-echo "  __list_specs.sh        - List all branch specs"
-echo "  auto-connect-design.sh - Used by commands (automatic)"
+echo "🎯 Core Philosophy:"
+echo "  • Test-driven: Run 100+ tests before writing docs"
+echo "  • Parallel execution: Independent component validation"
+echo "  • Contract-based: Black-box integration via CONTRACT.md"
+echo ""
+echo "📚 Documentation:"
+echo "  README: https://github.com/Piotr1215/design-kit"
+echo "  Philosophy: design-driven.md"
+echo ""
+echo "🚀 Happy building with Design-Kit!"
+echo ""

@@ -1,7 +1,7 @@
 [project]
-name = "specify-cli"
-version = "0.0.2"
-description = "Setup tool for Specify design-driven development projects"
+name = "design-kit"
+version = "0.1.0"
+description = "Test-driven, parallel-execution framework for building complex systems with Claude AI"
 requires-python = ">=3.11"
 dependencies = [
     "typer",
@@ -12,7 +12,13 @@ dependencies = [
 ]
 
 [project.scripts]
-specify = "specify_cli:main"
+design-kit = "specify_cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Piotr1215/design-kit"
+Documentation = "https://github.com/Piotr1215/design-kit/blob/main/design-driven.md"
+Repository = "https://github.com/Piotr1215/design-kit"
+Issues = "https://github.com/Piotr1215/design-kit/issues"
 
 [build-system]
 requires = ["hatchling"]
