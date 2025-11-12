@@ -33,10 +33,15 @@ echo "     ✓ /norm-integrate"
 echo "     ✓ /norm-tasks"
 echo "     ✓ /norm-task"
 
-# Copy auto-connect-design.sh to design-kit directory
+# Copy scripts to design-kit directory
 echo "  → Installing helper scripts..."
 cp -f scripts/auto-connect-design.sh ~/.claude/design-kit/
+cp -f scripts/list-tasks.sh ~/.claude/design-kit/
+cp -f scripts/show-task.sh ~/.claude/design-kit/
+chmod +x ~/.claude/design-kit/*.sh
 echo "     ✓ auto-connect-design.sh"
+echo "     ✓ list-tasks.sh"
+echo "     ✓ show-task.sh"
 
 # Create init.sh script (branch-based, norm approach)
 cat > ~/.claude/design-kit/init.sh << 'EOF'
@@ -71,8 +76,16 @@ mkdir -p "$BRANCH_DIR/tasks"
 # Create symlink for current PLAN
 ln -sfn "specs/${SAFE_BRANCH}/PLAN.md" "$CLAUDE_DIR/current-plan.md"
 
+# Copy helper scripts to project .claude directory
+if [[ -f ~/.claude/design-kit/list-tasks.sh ]]; then
+    cp ~/.claude/design-kit/list-tasks.sh "$CLAUDE_DIR/"
+    cp ~/.claude/design-kit/show-task.sh "$CLAUDE_DIR/"
+    chmod +x "$CLAUDE_DIR"/*.sh
+fi
+
 echo "✓ Created branch directory: $BRANCH_DIR"
 echo "✓ Symlinked current-plan.md for easy access"
+echo "✓ Installed helper scripts"
 echo ""
 echo "Structure:"
 echo "  .claude/"
