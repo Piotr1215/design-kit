@@ -118,6 +118,8 @@ Each git branch gets its own workspace:
 | `/norm-plan` | Create master plan with component breakdown | `PLAN.md` with phases |
 | `/norm-research` | Generate Phase 1 parallel proof tasks | Independent `TASK-P1-*.md` files |
 | `/norm-integrate` | Generate Phase 2 integration tasks | Integration `TASK-P2-*.md` files |
+| `/norm-tasks` | List all tasks with paths and status | Organized list of all tasks |
+| `/norm-task [ID]` | View/work on specific task (e.g., `/norm-task A`) | Full task content with context |
 
 ## Core Principles
 

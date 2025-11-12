@@ -30,6 +30,8 @@ cp -f templates/commands/*.md ~/.claude/commands/
 echo "     ✓ /norm-plan"
 echo "     ✓ /norm-research"
 echo "     ✓ /norm-integrate"
+echo "     ✓ /norm-tasks"
+echo "     ✓ /norm-task"
 
 # Copy auto-connect-design.sh to design-kit directory
 echo "  → Installing helper scripts..."
@@ -104,6 +106,8 @@ echo "📋 Available Commands:"
 echo "  /norm-plan      - Create master plan with phases"
 echo "  /norm-research  - Generate Phase 1 parallel proof tasks"
 echo "  /norm-integrate - Generate Phase 2 integration tasks"
+echo "  /norm-tasks     - List all tasks with paths and status"
+echo "  /norm-task [ID] - View/work on specific task (e.g., /norm-task A)"
 echo ""
 echo "💡 Quick Start:"
 echo "  1. Navigate to your project directory"
