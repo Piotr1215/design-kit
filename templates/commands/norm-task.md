@@ -3,10 +3,17 @@ View or work on a specific task by its identifier (e.g., "A", "B", "P2-A").
 ## Setup
 
 ```bash
-~/.claude/design-kit/auto-connect-design.sh
-BRANCH=$(git branch --show-current | sed 's/[^a-zA-Z0-9._-]/-/g')
-TASKS_DIR=".claude/specs/$BRANCH/tasks"
-PROOFS_DIR=".claude/specs/$BRANCH/proofs"
+# Get branch directory from auto-connect script
+BRANCH_INFO=$(~/.claude/design-kit/auto-connect-design.sh)
+BRANCH_DIR=$(echo "$BRANCH_INFO" | grep "Branch directory:" | cut -d: -f2 | xargs)
+
+if [[ -z "$BRANCH_DIR" ]]; then
+    echo "❌ Failed to detect branch directory"
+    exit 1
+fi
+
+TASKS_DIR="$BRANCH_DIR/tasks"
+PROOFS_DIR="$BRANCH_DIR/proofs"
 
 # Get task identifier from argument
 TASK_ID="${1:-}"
