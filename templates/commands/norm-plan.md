@@ -8,17 +8,30 @@ Create a master implementation plan following the norm philosophy: test-driven, 
 ## Setup
 
 ```bash
-~/.claude/design-kit/auto-connect-design.sh
-BRANCH=$(git branch --show-current | sed 's/[^a-zA-Z0-9._-]/-/g')
-PLAN_FILE=".claude/specs/$BRANCH/PLAN.md"
+# 1. Determine slug for this project. Order:
+#    a) If args contain a Linear project URL, derive slug from project name (kebab-case)
+#    b) Else if --slug <name> passed in args, use that
+#    c) Else prompt user: "Project slug (kebab-case, e.g. docs-config-automation)?"
+SLUG="<derived-or-prompted>"
 
-# Check if PLAN.md already exists
+# 2. Bind this repo to the project (creates global spec dir + local pointer)
+~/.claude/design-kit/auto-connect-design.sh --init "$SLUG"
+
+# 3. Compute paths
+SPEC_DIR="$HOME/.claude/specs/$SLUG"
+PLAN_FILE="$SPEC_DIR/PLAN.md"
+
+# 4. Check if PLAN.md already exists
 if [[ -f "$PLAN_FILE" ]]; then
     echo "❌ ERROR: PLAN.md already exists at $PLAN_FILE"
-    echo "To recreate: rm $PLAN_FILE"
+    echo "   The project '$SLUG' already has a plan."
+    echo "   To recreate: rm $PLAN_FILE"
+    echo "   To bind THIS repo to that existing project without recreating: just keep going — the pointer was set."
     exit 1
 fi
 ```
+
+**Path model**: plans are stored globally at `~/.claude/specs/<slug>/`, not per-branch in the current repo. Each repo that participates in the project drops a pointer file `<repo>/.claude/current-project` containing the slug. This means multiple repos and multiple branches can share one plan — Phase 1 proofs and Phase 2 task files all live in the global location.
 
 ## Task Description
 
@@ -28,8 +41,8 @@ Given project requirements: `{ARGS}`
 
 **Before creating PLAN.md, determine project state:**
 
-1. Check `.claude/specs/$BRANCH/proofs/` - any proofs exist?
-2. Check `.claude/specs/$BRANCH/tasks/` - any tasks exist?
+1. Check `$SPEC_DIR/proofs/` - any proofs exist?
+2. Check `$SPEC_DIR/tasks/` - any tasks exist?
 3. Determine appropriate action based on findings
 
 ## Core Philosophy
@@ -46,7 +59,7 @@ Given project requirements: `{ARGS}`
 
 ## Create PLAN.md Structure
 
-Write to `.claude/specs/$BRANCH/PLAN.md`:
+Write to `$SPEC_DIR/PLAN.md`:
 
 ```markdown
 # Project: [Name]
@@ -131,10 +144,79 @@ Phase 2 complete when:
 4. **Test strategy must be automatable** - no manual validation
 5. **Requirement-driven testing** - test coverage based on what can fail, not arbitrary numbers
 
+## Linear Project Binding (after PLAN.md is written)
+
+The kit can mirror the plan to a Linear project so the team sees the same source of truth. Local files remain the working artifacts (norm-research, norm-integrate read from disk); Linear is the visible mirror that agents can also pull from when working off a Linear issue.
+
+### Detection (in order)
+
+1. **Existing sidecar**: `.claude/specs/$BRANCH/linear.yaml` — already bound, update the doc
+2. **Args**: parse a `linear.app/.../project/<slug>` URL from `{ARGS}`
+3. **Env var**: `LINEAR_PROJECT_ID` set
+4. **Prompt user**: "Linear project to bind (name, URL, ID, or 'skip')?"
+
+### When bound — after writing PLAN.md
+
+1. Create or update Linear document attached to project:
+   - Title: `Implementation plan — <project name>`
+   - Content: full PLAN.md (no local-machine paths, no dates)
+   - Tool: `mcp__linear-server__save_document` (project=<id>, title=..., content=...)
+2. Read project milestones: `mcp__linear-server__get_project(includeMilestones: true)` and capture each milestone ID by name (M1, M2, M3 conventionally)
+3. Write `$SPEC_DIR/linear.yaml`:
+   ```yaml
+   project_id: <uuid>
+   project_url: https://linear.app/<workspace>/project/<slug>
+   plan_doc_id: <uuid>
+   plan_doc_url: https://linear.app/<workspace>/document/<slug>
+   team: <TEAM-KEY>            # e.g. DEVOPS
+   milestones:
+     M1: <uuid>                # name → id mapping
+     M2: <uuid>
+     M3: <uuid>
+   research_milestone: M1      # /norm-research issues land here
+   integrate_milestone: M3     # /norm-integrate issues land here
+   issue_map: {}               # filled in by /norm-research and /norm-integrate
+   ```
+4. Echo: `Plan synced to Linear: <plan_doc_url>`
+
+### MCP requirement
+
+Requires `mcp__linear-server__*` tools. If MCP is unreachable, **DO NOT silently skip** — print:
+
+```
+❌ Linear MCP not reachable. Either:
+   - fix the MCP server, OR
+   - run with LINEAR_SKIP=1 to bypass and work local-only
+```
+
+Exit non-zero so the user notices.
+
+### Skipping
+
+If user passes `LINEAR_SKIP=1` or answers "skip": work local-only. PLAN.md still written. No sidecar created.
+
+### What gets put inside a Linear issue (referenced from /norm-research and /norm-integrate)
+
+Every Linear issue created by the toolchain must include this header so the executing agent knows where to find shared context:
+
+```markdown
+## Source artifacts
+
+- **Master plan**: [Implementation plan — <project>](<plan_doc_url>)
+- **Local task file** (for tools, when working from a checkout): `~/.claude/specs/<slug>/tasks/<task-file>.md`
+
+## How to use this issue
+
+1. Pull the master plan from the Linear document above (link is the source of truth)
+2. Read this issue body for component-specific instructions
+3. Local scratch space (any machine that has the project bound): `~/.claude/specs/<slug>/proofs/<component>/`
+4. When done, comment on this issue with summary + PR link, then mark Done
+```
+
 ## Next Steps
 
-After PLAN.md is created:
-- Run `/norm-research` to generate Phase 1 parallel proof tasks
+After PLAN.md is created and (optionally) Linear-bound:
+- Run `/norm-research` to generate Phase 1 parallel proof tasks (also creates Linear issues if bound)
 - Complete all Phase 1 tasks independently
-- Review feedback, update PLAN.md if needed
+- Review feedback, update PLAN.md if needed (and re-sync to Linear doc)
 - Run `/norm-integrate` to generate Phase 2 integration tasks

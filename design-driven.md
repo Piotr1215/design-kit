@@ -305,32 +305,32 @@ update CONTRACT.md with refresh interface.
 - Prevents technical debt
 - Maintains black-box integration
 
-## Branch-Based Workflow
+## Slug-Based Workflow
 
-Each git branch gets its own workspace:
+Each project gets a global, slug-keyed workspace under `~/.claude/specs/`. A project usually spans multiple repos (e.g. backend + frontend + docs) and many branches (one per ticket). Tying the workspace to a single repo's current branch is wrong: branches change, repos diverge, and the plan loses its home.
 
 ```
-.claude/specs/
-├── main/
+~/.claude/specs/
+├── docs-config-automation-improvements/
 │   ├── PLAN.md
-│   ├── proofs/
-│   └── tasks/
-├── feature-oauth/
-│   ├── PLAN.md
+│   ├── linear.yaml          # optional: Linear binding metadata
 │   ├── proofs/
 │   │   ├── token-validator/
 │   │   └── rate-limiter/
 │   └── tasks/
 │       ├── TASK-P1-A-token-validator.md
 │       └── TASK-P2-C-auth-integration.md
-└── feature-pdf/
+└── another-project/
     └── ...
 ```
 
-Switch branch = switch context automatically via symlinks:
+Each repo that participates in a project drops a pointer so the kit can resolve the right global workspace:
+
 ```
-.claude/current-plan.md → specs/{current-branch}/PLAN.md
+<repo>/.claude/current-project    # plain text, single line: the slug
 ```
+
+Switching branches in any repo doesn't change the workspace — the pointer stays the same. Multiple repos can point at the same project, enabling cross-repo coordination through one shared plan.
 
 ## Commands
 
@@ -341,7 +341,7 @@ Creates master plan with component breakdown:
 /norm-plan "Build REST API with OAuth2 authentication and rate limiting"
 ```
 
-Produces: `.claude/specs/{branch}/PLAN.md`
+Produces: `~/.claude/specs/{slug}/PLAN.md`
 
 ### /norm-research
 
@@ -350,7 +350,7 @@ Generates Phase 1 parallel proof tasks:
 /norm-research
 ```
 
-Creates: `.claude/specs/{branch}/tasks/TASK-P1-*.md` files
+Creates: `~/.claude/specs/{slug}/tasks/TASK-P1-*.md` files
 
 ### /norm-integrate
 
@@ -359,7 +359,7 @@ Generates Phase 2 integration tasks:
 /norm-integrate
 ```
 
-Creates: `.claude/specs/{branch}/tasks/TASK-P2-*.md` files
+Creates: `~/.claude/specs/{slug}/tasks/TASK-P2-*.md` files
 
 ## Benefits
 
@@ -475,12 +475,21 @@ TESTING.md: "Run ./run.sh - automated harness validates 127 test cases"
 - Prototypes/experiments
 - Time-sensitive hotfixes
 
+## Optional: Linear Project Binding
+
+The kit can mirror plans, proof tasks, and integration tasks to a Linear project. Local files remain the toolchain's source — `/norm-research` and `/norm-integrate` still read and write the local `.claude/specs/<branch>/` tree. Linear is an additional source/target for the same information so distributed teams can see and assign work without local-machine access.
+
+A `.claude/specs/<branch>/linear.yaml` sidecar captures project / document / milestone IDs after `/norm-plan` runs with binding enabled. Each subsequent command checks for the sidecar and mirrors writes to Linear if present.
+
+See `templates/linear-binding.md` for the schema, lifecycle, and issue body templates.
+
 ## Further Reading
 
-- `/home/decoder/dev/design-kit/README.md` - Installation and usage
-- `.claude/specs/{branch}/PLAN.md` - Your project's plan
-- `.claude/specs/{branch}/proofs/*/CONTRACT.md` - Component interfaces
-- `.claude/specs/{branch}/proofs/*/TESTING.md` - Validation strategies
+- `README.md` - Installation and usage
+- `templates/linear-binding.md` - Linear binding pattern (optional)
+- `~/.claude/specs/{slug}/PLAN.md` - Your project's plan
+- `~/.claude/specs/{slug}/proofs/*/CONTRACT.md` - Component interfaces
+- `~/.claude/specs/{slug}/proofs/*/TESTING.md` - Validation strategies
 
 ---
 

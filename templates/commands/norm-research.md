@@ -8,26 +8,35 @@ Generate Phase 1 proof-of-concept tasks. Each task must be 100% independent and 
 ## Setup
 
 ```bash
-~/.claude/design-kit/auto-connect-design.sh
-BRANCH=$(git branch --show-current | sed 's/[^a-zA-Z0-9._-]/-/g')
-PLAN_FILE=".claude/specs/$BRANCH/PLAN.md"
-TASKS_DIR=".claude/specs/$BRANCH/tasks"
+# Resolve global spec dir via the per-repo pointer
+output=$(~/.claude/design-kit/auto-connect-design.sh)
+SPEC_DIR=$(echo "$output" | awk '/^SpecDir:/ {print $2}')
+SLUG=$(echo "$output" | awk '/^Slug:/ {print $2}')
 
-# Check if PLAN.md exists
+if [[ -z "$SPEC_DIR" ]]; then
+    echo "❌ ERROR: No project bound to this repo. Run /norm-plan first to bind."
+    exit 1
+fi
+
+PLAN_FILE="$SPEC_DIR/PLAN.md"
+TASKS_DIR="$SPEC_DIR/tasks"
+LINEAR_FILE="$SPEC_DIR/linear.yaml"
+
 if [[ ! -f "$PLAN_FILE" ]]; then
-    echo "❌ ERROR: PLAN.md not found. Run /norm-plan first."
+    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /norm-plan first."
     exit 1
 fi
 
 # Read PLAN.md for context
 # Write TASK-P1-*.md files to $TASKS_DIR/
+# If $LINEAR_FILE exists, also mirror each task as a Linear issue (see "Linear Sync" section below)
 ```
 
 ## Context
 
 **Load these sources:**
-1. Read `.claude/specs/$BRANCH/PLAN.md` - component breakdown
-2. Check CLAUDE.md for repo conventions
+1. Read `$SPEC_DIR/PLAN.md` - component breakdown
+2. Check CLAUDE.md in the current repo for repo conventions
 3. Scan codebase for existing patterns
 
 ## Task Generation Rules
@@ -158,7 +167,7 @@ Network/debug commands: [if applicable]
 
 ## Deliverable
 
-Working proof in `.claude/specs/$BRANCH/proofs/[component-name]/` with:
+Working proof in `$SPEC_DIR/proofs/[component-name]/` with:
 
 **CRITICAL: Incremental Test Development (NOT batch testing):**
 
@@ -210,7 +219,7 @@ All checkboxes above are complete with empirical evidence.
 ## Your Task
 
 For each component in PLAN.md:
-1. Create one TASK-P1-*.md file in `.claude/specs/$BRANCH/tasks/`
+1. Create one TASK-P1-*.md file in `$SPEC_DIR/tasks/`
 2. Keep each task concise and focused (as brief as needed to convey requirements)
 3. Emphasize testing strategy upfront
 4. Ensure 100% parallelism (no cross-task dependencies)
@@ -234,11 +243,94 @@ After generating tasks, ask yourself:
 - ✅ Are tasks concise and focused?
 - ✅ Are test coverage targets based on requirements, not arbitrary numbers?
 
+## Linear Sync (if linear.yaml exists)
+
+After writing local TASK-P1-*.md files, mirror each as a Linear issue so the team can see and assign the work.
+
+### Detection
+
+```bash
+# $LINEAR_FILE was already computed in Setup as $SPEC_DIR/linear.yaml
+[[ -f "$LINEAR_FILE" ]] || skip Linear sync
+```
+
+If `linear.yaml` is absent, skip Linear sync entirely (local-only mode).
+
+### MCP requirement
+
+Requires `mcp__linear-server__*`. If unreachable:
+```
+❌ Linear MCP not reachable. Local tasks were written, but Linear issues were NOT created.
+   Run /norm-sync-linear later to retry, or fix MCP and re-run /norm-research.
+```
+Do not silently continue.
+
+### For each TASK-P1-*.md
+
+1. Compute task ID from filename (e.g. `TASK-P1-A1` → `A1`)
+2. Skip if `linear.yaml`'s `issue_map` already has this task ID (idempotent)
+3. Create Linear issue:
+   - **team**: from `linear.yaml` `team`
+   - **project**: from `linear.yaml` `project_id`
+   - **milestone**: from `linear.yaml` `research_milestone`
+   - **title**: `<component>: <one-line goal>` (lowercase, no period)
+   - **description**: see template below
+   - **state**: `Todo`
+4. Append to `linear.yaml` `issue_map`: `<task-id>: <issue-identifier>` (e.g. `A1: DEVOPS-867`)
+5. Echo: `Created <issue-identifier> for <task-id>`
+
+### Issue body template
+
+Each issue body must contain:
+
+```markdown
+## Source artifacts
+
+- **Master plan**: [<doc-title>](<plan_doc_url>)
+- **Local task file** (for tools, on any machine that has the project bound): `~/.claude/specs/<slug>/tasks/<TASK-FILE>.md`
+
+## How to use this issue
+
+1. Pull the master plan from the Linear document above (source of truth)
+2. Read this issue body for the component-specific instructions
+3. Local proof scratch space: `~/.claude/specs/<slug>/proofs/<component>/`
+4. When done, comment with summary + PR link(s), then mark Done
+
+## Goal
+
+<task goal — copy from local TASK file>
+
+## Testing strategy
+
+<copy from local TASK file>
+
+## Research starting points
+
+<copy from local TASK file>
+
+## Deliverables
+
+In `~/.claude/specs/<slug>/proofs/<component>/`:
+- run.sh (exits 0 / 1)
+- CONTRACT.md
+- TESTING.md
+- FEEDBACK.md
+- results/
+
+## Done when
+
+<copy from local TASK file>
+```
+
+### Idempotency
+
+Re-running `/norm-research` on an already-bound plan must not create duplicate Linear issues. Use `issue_map` to detect existing issues and update them in place via `save_issue` with `id`.
+
 ## Next Steps
 
 After tasks are generated:
-- Agent(s) execute Phase 1 tasks independently
+- Agent(s) execute Phase 1 tasks independently (locally and/or pulling Linear issues)
 - Each produces CONTRACT.md + TESTING.md + sufficient test runs to validate requirements
 - Review all FEEDBACK.md files
-- Update PLAN.md if discoveries warrant changes
+- Update PLAN.md if discoveries warrant changes (and re-sync the Linear doc)
 - Then run `/norm-integrate` for Phase 2

@@ -88,12 +88,13 @@ Connect proven components to actual system:
 
 ### Workspace Structure
 
-Each git branch gets its own workspace:
+Each project gets a global, slug-keyed home. Multiple repos and branches share one project.
 
 ```
-.claude/specs/
-├── main/
+~/.claude/specs/
+├── docs-config-automation-improvements/
 │   ├── PLAN.md           # Master plan with phases
+│   ├── linear.yaml       # (optional) Linear binding metadata
 │   ├── proofs/           # Phase 1 proof-of-concepts
 │   │   ├── pdf-gen/
 │   │   │   ├── run.sh           # Automated test harness
@@ -103,13 +104,19 @@ Each git branch gets its own workspace:
 │   │   │   └── results/         # Test outputs
 │   │   └── auth-api/
 │   └── tasks/            # Task definitions
-└── feature-xyz/
+└── another-project/
     ├── PLAN.md
     ├── proofs/
     └── tasks/
 ```
 
-**Switch branch = switch plan.** Automatic symlinks via `.claude/current-plan.md`.
+**Each repo participating in a project drops a pointer** so the kit knows which project applies when commands run from that repo:
+
+```
+<repo>/.claude/current-project    # plain text, single line: the slug
+```
+
+Multiple repos can point at the same project — that's the cross-repo coordination model. Branch is no longer the anchor; it's just metadata about which Linear issue is in flight.
 
 ## Commands
 
@@ -179,9 +186,31 @@ Building a REST API with OAuth2 + PDF generation:
 - Quick prototypes or experiments
 - Time-sensitive hotfixes
 
+## Linear Integration (optional)
+
+If your project lives in a Linear workspace, the kit can mirror plans and tasks to Linear so the team sees the same source of truth. Local files remain the toolchain's working artifacts; Linear is the visible mirror that agents can also pull from when working off a Linear issue.
+
+**How it works:**
+
+1. `/norm-plan` (when bound) creates a Linear document attached to the project, captures project + milestone IDs in `.claude/specs/<branch>/linear.yaml`
+2. `/norm-research` mirrors each Phase 1 task as a Linear issue in the `research_milestone` (default: M1)
+3. `/norm-integrate` mirrors each Phase 2 task as a Linear issue in the `integrate_milestone` (default: M3)
+
+Each Linear issue includes a standard header pointing back to the plan document and the local task file. Agents working from a Linear issue link can pull the plan from Linear without local-machine access.
+
+**Requirements:**
+
+- `mcp__linear-server__*` tools available (Claude's Linear MCP integration)
+- A Linear project to bind to
+
+**To skip Linear sync** for a particular plan, pass `LINEAR_SKIP=1` when running `/norm-plan`.
+
+See [linear-binding.md](templates/linear-binding.md) for the full pattern: sidecar schema, lifecycle, issue body templates, and MCP requirements.
+
 ## Documentation
 
 - **[Design-Driven Development Philosophy](design-driven.md)** - Deep dive into the methodology
+- **[Linear Project Binding](templates/linear-binding.md)** - Optional mirror to a Linear project
 - **[Installation Guide](install.sh)** - Detailed setup instructions
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
 - **[Changelog](CHANGELOG.md)** - Version history

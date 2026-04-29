@@ -1,54 +1,102 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Setup design-kit directory for branch
-# Each command will check for overwrites individually
+# Resolve the design-kit spec directory for the current working context.
+#
+# Globally-anchored model:
+#   ~/.claude/specs/<slug>/         # global spec home, one per project
+#
+# Each repo can opt-in to a project by dropping a pointer:
+#   <repo>/.claude/current-project  # plain text, single line: <slug>
+#
+# Multiple repos can point at the same project (cross-repo work).
+# Multiple branches in a repo all resolve to the same project (branch is
+# no longer the anchor; it's just metadata for which Linear issue is in flight).
+#
+# Modes
+# -----
+#   auto-connect-design.sh                 # resolve + ensure subdirs, print status
+#   auto-connect-design.sh --init <slug>   # bootstrap a new project (called by /norm-plan)
+#
+# Outputs (resolve mode):
+#   Slug: <slug>
+#   SpecDir: <absolute path>
+#
+# If no pointer is found in resolve mode, prints a warning and exits 0.
+# Caller decides whether that's an error or whether to bootstrap.
 
-CLAUDE_DIR=".claude"
+GLOBAL_SPECS="$HOME/.claude/specs"
+LOCAL_POINTER=".claude/current-project"
 
-# Create base structure if needed
-if [[ ! -d "$CLAUDE_DIR" ]]; then
-    mkdir -p "$CLAUDE_DIR/specs"
+cmd="${1:-}"
 
-    # Add to .gitignore if needed
-    if [[ -f .gitignore ]] && ! grep -q "^\.claude/" .gitignore; then
-        echo -e "\n# Claude design-kit artifacts\n.claude/" >> .gitignore
+case "$cmd" in
+  --init)
+    slug="${2:-}"
+    if [[ -z "$slug" ]]; then
+      echo "Usage: auto-connect-design.sh --init <slug>" >&2
+      exit 1
     fi
+
+    # Validate slug — letters, digits, dot, dash, underscore only
+    if [[ ! "$slug" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+      echo "❌ Invalid slug: '$slug'. Use [a-zA-Z0-9._-] only." >&2
+      exit 1
+    fi
+
+    spec_dir="$GLOBAL_SPECS/$slug"
+    mkdir -p "$spec_dir/proofs" "$spec_dir/tasks"
+
+    mkdir -p ".claude"
+    echo "$slug" > "$LOCAL_POINTER"
+
+    # Ensure .claude/ is gitignored (per-repo pointer is local state)
+    if [[ -f .gitignore ]] && ! grep -q "^\.claude/" .gitignore; then
+      printf '\n# Claude design-kit pointer (local)\n.claude/\n' >> .gitignore
+    fi
+
+    echo "✓ Initialized project: $slug"
+    echo "  Global spec dir: $spec_dir"
+    echo "  Local pointer:   $(pwd)/$LOCAL_POINTER → $slug"
+    exit 0
+    ;;
+  --help|-h)
+    sed -n '3,30p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0
+    ;;
+esac
+
+# Default: resolve and ensure
+if [[ ! -f "$LOCAL_POINTER" ]]; then
+  echo "⚠ No project bound to this repo (no $LOCAL_POINTER)."
+  echo "  Run /norm-plan to create a new project, or"
+  echo "  $(basename "$0") --init <slug>   # bind this repo to an existing global project."
+  exit 0
 fi
 
-# Get current branch name
-BRANCH=$(git branch --show-current 2>/dev/null || echo "detached")
+slug=$(<"$LOCAL_POINTER")
+# Strip whitespace
+slug="${slug//[$'\t\r\n ']/}"
 
-# Sanitize branch name for directory (replace / with -)
-SAFE_BRANCH=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/-/g')
-
-# Create branch directory with norm structure
-BRANCH_DIR="$CLAUDE_DIR/specs/$SAFE_BRANCH"
-if [[ ! -d "$BRANCH_DIR" ]]; then
-    mkdir -p "$BRANCH_DIR/proofs"
-    mkdir -p "$BRANCH_DIR/tasks"
-    echo "✓ Created new branch directory: $BRANCH"
-else
-    echo "✓ Branch directory exists: $BRANCH"
-    # Ensure subdirectories exist
-    mkdir -p "$BRANCH_DIR/proofs"
-    mkdir -p "$BRANCH_DIR/tasks"
+if [[ -z "$slug" ]]; then
+  echo "❌ Pointer $LOCAL_POINTER is empty." >&2
+  exit 1
 fi
 
-# Show what we have
-echo "→ Branch directory: $BRANCH_DIR"
-if [[ -f "$BRANCH_DIR/PLAN.md" ]]; then
-    echo "  Has PLAN.md"
-fi
-if [[ -d "$BRANCH_DIR/proofs" ]]; then
-    PROOF_COUNT=$(find "$BRANCH_DIR/proofs" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
-    echo "  Has $PROOF_COUNT proof(s)"
-fi
-if [[ -d "$BRANCH_DIR/tasks" ]]; then
-    TASK_COUNT=$(find "$BRANCH_DIR/tasks" -name "TASK-*.md" 2>/dev/null | wc -l)
-    echo "  Has $TASK_COUNT task(s)"
-fi
+spec_dir="$GLOBAL_SPECS/$slug"
+mkdir -p "$spec_dir/proofs" "$spec_dir/tasks"
 
-# Output the branch name for use in commands
+echo "→ Project: $slug"
+echo "  Spec dir: $spec_dir"
+
+[[ -f "$spec_dir/PLAN.md" ]]      && echo "  Has PLAN.md"
+[[ -f "$spec_dir/linear.yaml" ]]  && echo "  Has linear.yaml (Linear-bound)"
+
+proof_count=$(find "$spec_dir/proofs" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
+task_count=$(find "$spec_dir/tasks"  -name "TASK-*.md" 2>/dev/null | wc -l)
+echo "  Has $proof_count proof(s), $task_count task(s)"
+
+# Stable identifiers for downstream commands
 echo ""
-echo "Branch: $SAFE_BRANCH"
+echo "Slug: $slug"
+echo "SpecDir: $spec_dir"

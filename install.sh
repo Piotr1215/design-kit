@@ -43,72 +43,11 @@ echo "     ✓ auto-connect-design.sh"
 echo "     ✓ list-tasks.sh"
 echo "     ✓ show-task.sh"
 
-# Create init.sh script (branch-based, norm approach)
-cat > ~/.claude/design-kit/init.sh << 'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Initialize .claude directory for design-kit workflow (branch-based, norm approach)
-
-CLAUDE_DIR=".claude"
-
-# Create base structure if needed
-if [[ ! -d "$CLAUDE_DIR" ]]; then
-    mkdir -p "$CLAUDE_DIR/specs"
-
-    # Add to .gitignore
-    if [[ -f .gitignore ]] && ! grep -q "^\.claude/" .gitignore; then
-        echo -e "\n# Claude design-kit artifacts\n.claude/" >> .gitignore
-    fi
+# Clean up legacy branch-based init.sh from older installs (now dead — superseded by auto-connect-design.sh --init <slug>)
+if [[ -f ~/.claude/design-kit/init.sh ]]; then
+    rm -f ~/.claude/design-kit/init.sh
+    echo "     ✓ removed legacy init.sh (use 'auto-connect-design.sh --init <slug>' instead)"
 fi
-
-# Get current branch name for directory
-BRANCH=$(git branch --show-current 2>/dev/null || echo "detached")
-
-# Sanitize branch name for directory (replace / and other special chars with -)
-SAFE_BRANCH=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9._-]/-/g')
-
-# Create branch directory with norm structure
-BRANCH_DIR="$CLAUDE_DIR/specs/${SAFE_BRANCH}"
-mkdir -p "$BRANCH_DIR/proofs"
-mkdir -p "$BRANCH_DIR/tasks"
-
-# Create symlink for current PLAN
-ln -sfn "specs/${SAFE_BRANCH}/PLAN.md" "$CLAUDE_DIR/current-plan.md"
-
-# Copy helper scripts to project .claude directory
-if [[ -f ~/.claude/design-kit/list-tasks.sh ]]; then
-    cp ~/.claude/design-kit/list-tasks.sh "$CLAUDE_DIR/"
-    cp ~/.claude/design-kit/show-task.sh "$CLAUDE_DIR/"
-    chmod +x "$CLAUDE_DIR"/*.sh
-fi
-
-echo "✓ Created branch directory: $BRANCH_DIR"
-echo "✓ Symlinked current-plan.md for easy access"
-echo "✓ Installed helper scripts"
-echo ""
-echo "Structure:"
-echo "  .claude/"
-echo "  ├── specs/"
-echo "  │   ├── main/"
-echo "  │   │   ├── PLAN.md"
-echo "  │   │   ├── proofs/"
-echo "  │   │   └── tasks/"
-echo "  │   └── ${SAFE_BRANCH}/ (current)"
-echo "  │       ├── PLAN.md"
-echo "  │       ├── proofs/"
-echo "  │       └── tasks/"
-echo "  └── current-plan.md → specs/${SAFE_BRANCH}/PLAN.md"
-echo ""
-echo "Ready for:"
-echo "  /norm-plan     - Create master plan with phases"
-echo "  /norm-research - Generate Phase 1 parallel proof tasks"
-echo "  /norm-integrate - Generate Phase 2 integration tasks"
-EOF
-
-# Make init.sh executable
-chmod +x ~/.claude/design-kit/init.sh
-echo "     ✓ init.sh"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -123,9 +62,11 @@ echo "  /norm-tasks     - List all tasks with paths and status"
 echo "  /norm-task [ID] - View/work on specific task (e.g., /norm-task A)"
 echo ""
 echo "💡 Quick Start:"
-echo "  1. Navigate to your project directory"
-echo "  2. Create a feature branch: git checkout -b feature/my-feature"
-echo "  3. Start planning: /norm-plan \"Your project description\""
+echo "  1. Navigate to a repo that participates in your project"
+echo "  2. Start planning: /norm-plan \"Your project description\""
+echo "     (writes plan to ~/.claude/specs/<slug>/, drops a per-repo pointer)"
+echo "  3. To bind a second repo to the same project:"
+echo "     ~/.claude/design-kit/auto-connect-design.sh --init <slug>"
 echo ""
 echo "🎯 Core Philosophy:"
 echo "  • Test-driven: Run 100+ tests before writing docs"

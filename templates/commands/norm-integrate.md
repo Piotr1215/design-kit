@@ -11,15 +11,23 @@ Going back to Phase 1 for refinement is NORMAL and EXPECTED in real engineering.
 ## Setup
 
 ```bash
-~/.claude/design-kit/auto-connect-design.sh
-BRANCH=$(git branch --show-current | sed 's/[^a-zA-Z0-9._-]/-/g')
-PLAN_FILE=".claude/specs/$BRANCH/PLAN.md"
-PROOFS_DIR=".claude/specs/$BRANCH/proofs"
-TASKS_DIR=".claude/specs/$BRANCH/tasks"
+# Resolve global spec dir via the per-repo pointer
+output=$(~/.claude/design-kit/auto-connect-design.sh)
+SPEC_DIR=$(echo "$output" | awk '/^SpecDir:/ {print $2}')
+SLUG=$(echo "$output" | awk '/^Slug:/ {print $2}')
 
-# Check if PLAN.md exists
+if [[ -z "$SPEC_DIR" ]]; then
+    echo "❌ ERROR: No project bound to this repo. Run /norm-plan first to bind."
+    exit 1
+fi
+
+PLAN_FILE="$SPEC_DIR/PLAN.md"
+PROOFS_DIR="$SPEC_DIR/proofs"
+TASKS_DIR="$SPEC_DIR/tasks"
+LINEAR_FILE="$SPEC_DIR/linear.yaml"
+
 if [[ ! -f "$PLAN_FILE" ]]; then
-    echo "❌ ERROR: PLAN.md not found. Run /norm-plan first."
+    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /norm-plan first."
     exit 1
 fi
 
@@ -39,16 +47,17 @@ fi
 
 # Read PLAN.md and proof contracts for context
 # Write TASK-P2-*.md files to $TASKS_DIR/
+# If $LINEAR_FILE exists, mirror each task as a Linear issue (see "Linear Sync" below)
 ```
 
 ## Context
 
 **Load these sources:**
-1. Read `.claude/specs/$BRANCH/PLAN.md` - integration requirements
-2. Read all `proofs/*/CONTRACT.md` - proven component interfaces
-3. Read all `proofs/*/TESTING.md` - validation strategies
-4. Read all `proofs/*/FEEDBACK.md` - discoveries and gotchas
-5. Check CLAUDE.md for repo conventions
+1. Read `$SPEC_DIR/PLAN.md` - integration requirements
+2. Read all `$SPEC_DIR/proofs/*/CONTRACT.md` - proven component interfaces
+3. Read all `$SPEC_DIR/proofs/*/TESTING.md` - validation strategies
+4. Read all `$SPEC_DIR/proofs/*/FEEDBACK.md` - discoveries and gotchas
+5. Check CLAUDE.md in the current repo for repo conventions
 6. Scan actual codebase to understand current implementation
 7. **CHECK MEMORY MCP** for proven test harness patterns to reuse Phase 1 harness
 
@@ -91,7 +100,7 @@ Example conflict: Both tasks modify `api/server.go` + `api/handlers.go` → Sequ
 Integrate proven [component] from Phase 1 into [target system].
 
 ## Prerequisites
-- TASK-P1-[X] completed with CONTRACT.md at `.claude/specs/$BRANCH/proofs/[component]/CONTRACT.md`
+- TASK-P1-[X] completed with CONTRACT.md at `$SPEC_DIR/proofs/[component]/CONTRACT.md`
 - [If sequential] TASK-P2-[Y] completed (modifies same files: [list files])
 
 ## Current Implementation Analysis
@@ -116,7 +125,7 @@ Integrate proven [component] from Phase 1 into [target system].
 
 ## What to Implement
 
-**Must Reference**: `.claude/specs/$BRANCH/proofs/[component]/CONTRACT.md` ONLY (never internal implementation)
+**Must Reference**: `$SPEC_DIR/proofs/[component]/CONTRACT.md` ONLY (never internal implementation)
 
 **Replace**:
 - [File:LineNumbers to be replaced]
@@ -190,7 +199,7 @@ Integrate proven [component] from Phase 1 into [target system].
 For each component that needs integration:
 1. Analyze existing codebase implementation
 2. Read corresponding proof CONTRACT.md + TESTING.md
-3. Create one TASK-P2-*.md file in `.claude/specs/$BRANCH/tasks/`
+3. Create one TASK-P2-*.md file in `$SPEC_DIR/tasks/`
 4. Specify file-level integration points
 5. Mark sequential dependencies if tasks modify same files
 6. Include regression testing requirements
@@ -223,11 +232,62 @@ After generating tasks:
 - ✅ Regression testing included (re-run Phase 1 harness)
 - ✅ Refinement path clear if contracts insufficient
 
+## Linear Sync (if linear.yaml exists)
+
+Mirror each TASK-P2-*.md as a Linear issue in the `integrate_milestone`. Same mechanism as `/norm-research` but the target milestone is read from `linear.yaml` `integrate_milestone` (default M3).
+
+### Detection, MCP requirement, idempotency
+
+Identical to `/norm-research` — see that command for details. Quick recap:
+
+- Detect: `.claude/specs/$BRANCH/linear.yaml` present
+- MCP unreachable → flag clearly, do not silently skip
+- Use `issue_map` to avoid duplicates; update existing issues via `save_issue(id=...)`
+
+### Issue body template
+
+```markdown
+## Source artifacts
+
+- **Master plan**: [<doc-title>](<plan_doc_url>)
+- **Phase 1 contracts** (read these, NOT proof internals):
+  - `~/.claude/specs/<slug>/proofs/<component>/CONTRACT.md`
+  - `~/.claude/specs/<slug>/proofs/<component>/TESTING.md`
+- **Local task file**: `~/.claude/specs/<slug>/tasks/<TASK-FILE>.md`
+
+## How to use this issue
+
+1. Pull the master plan from the Linear document above
+2. Read the relevant Phase 1 CONTRACT.md + TESTING.md ONLY (never the proof's implementation)
+3. This issue body lists the integration scope
+4. When done, comment with summary + PR link(s), then mark Done
+
+## Goal
+
+<copy from local TASK file>
+
+## Prerequisites
+
+<copy from local TASK file>
+
+## What to implement
+
+<copy from local TASK file>
+
+## Done when
+
+<copy from local TASK file>
+
+## If contract is insufficient
+
+If integration reveals contract gaps, do NOT work around them. Create a REFINEMENT issue (file `TASK-P1-X-REFINEMENT-*.md` locally and a Linear sub-issue under the original Phase 1 issue), refine the proof, update CONTRACT.md, then return here.
+```
+
 ## Next Steps
 
 After Phase 2 tasks are generated:
-- Agent(s) execute integration tasks
+- Agent(s) execute integration tasks (locally and/or pulling Linear issues)
 - Re-run Phase 1 harnesses with real system data
 - If contract gaps found → create REFINEMENT tasks
 - Verify no regressions in existing functionality
-- Update documentation
+- Update documentation (and re-sync the Linear plan doc if PLAN.md changed)
