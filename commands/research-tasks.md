@@ -1,6 +1,6 @@
 ---
-name: norm-research
-description: "Generate Phase 1 parallel proof tasks (project, gitignored)"
+name: research-tasks
+description: "Generate Phase 1 parallel proof-of-concept tasks (one per component, 100% independent, test-driven)"
 ---
 
 Generate Phase 1 proof-of-concept tasks. Each task must be 100% independent and test-driven.
@@ -9,12 +9,12 @@ Generate Phase 1 proof-of-concept tasks. Each task must be 100% independent and 
 
 ```bash
 # Resolve global spec dir via the per-repo pointer
-output=$(~/.claude/design-kit/auto-connect-design.sh)
+output=$("${CLAUDE_PLUGIN_ROOT}/scripts/auto-connect-design.sh")
 SPEC_DIR=$(echo "$output" | awk '/^SpecDir:/ {print $2}')
 SLUG=$(echo "$output" | awk '/^Slug:/ {print $2}')
 
 if [[ -z "$SPEC_DIR" ]]; then
-    echo "❌ ERROR: No project bound to this repo. Run /norm-plan first to bind."
+    echo "❌ ERROR: No project bound to this repo. Run /design-kit:plan first to bind."
     exit 1
 fi
 
@@ -23,7 +23,7 @@ TASKS_DIR="$SPEC_DIR/tasks"
 LINEAR_FILE="$SPEC_DIR/linear.yaml"
 
 if [[ ! -f "$PLAN_FILE" ]]; then
-    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /norm-plan first."
+    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /design-kit:plan first."
     exit 1
 fi
 
@@ -105,65 +105,14 @@ Prove [component X] works reliably in isolation with automated validation.
 
 **BEFORE setting up a new test harness, check if Memory MCP has proven patterns:**
 
-```bash
-# Search memory for test harness guides
-# Examples: "playwright setup", "jest harness", "pytest setup", "cypress setup"
-```
-
 **If Memory MCP available:**
 1. Search for: `[tech-stack] quick setup guide` or `[tech-stack] test harness`
 2. Example queries: "Playwright quick setup", "Jest configuration", "Pytest harness", "Cypress setup"
 3. Follow proven steps from memory to avoid common pitfalls
-4. Memory contains step-by-step guides like `Playwright_Quick_Setup_Guide`
 
-**If you create a NOVEL test harness (not in memory):**
+**If you create a NOVEL test harness (not in memory): YOU MUST add your setup steps to memory.**
 
-**YOU MUST add your setup steps to memory using Memory MCP:**
-
-Create memory entity with pattern: `[Tech]_Quick_Setup_Guide`
-
-**Required format:**
-- Entity name: `[Technology]_Quick_Setup_Guide` (e.g., `Playwright_Quick_Setup_Guide`, `Jest_Quick_Setup_Guide`)
-- Entity type: `development_guide`
-- Observations: Step-by-step setup instructions (GENERIC, not project-specific)
-
-**Example observation format:**
-```
-Quick setup guide for [Technology] test harness - follow these steps in order
-1. Create directories: mkdir -p [structure]
-2. Install dependencies: [exact commands]
-3. Create config file: [filename with essential config]
-4. Create first test: [minimal working example]
-5. Run single test first: [command with --debug/--headed flag]
-6. Run all tests: [command] (only after single test works!)
-7. View results: [how to check output]
-8. Docs: [official docs URL]
-Key config options: [explain critical settings]
-CRITICAL: [key gotcha or debugging tip]
-Network/debug commands: [if applicable]
-```
-
-**What makes a GOOD memory entry:**
-- ✅ GENERIC steps that work across projects
-- ✅ Exact commands (copy-paste ready)
-- ✅ Minimal working example
-- ✅ Debug/verify steps ("run ONE test first with --headed")
-- ✅ Common gotchas and fixes
-- ✅ Links to official docs
-- ❌ NOT project-specific paths/config
-- ❌ NOT implementation details
-- ❌ NOT full test suite code
-
-**Why this matters:**
-- Saves hours for future agents setting up same tech stack
-- Captures proven approaches (not trial-and-error)
-- Builds collective knowledge base
-- Enables rapid test harness setup across projects
-
-**After adding to memory:**
-- Verify with memory search to ensure it's discoverable
-- Use clear, searchable entity names
-- Include technology name in observations for search matching
+Create memory entity with pattern: `[Tech]_Quick_Setup_Guide`. Use generic, copy-paste-ready commands. Skip project-specific details.
 
 ## Deliverable
 
@@ -220,7 +169,7 @@ All checkboxes above are complete with empirical evidence.
 
 For each component in PLAN.md:
 1. Create one TASK-P1-*.md file in `$SPEC_DIR/tasks/`
-2. Keep each task concise and focused (as brief as needed to convey requirements)
+2. Keep each task concise and focused
 3. Emphasize testing strategy upfront
 4. Ensure 100% parallelism (no cross-task dependencies)
 5. Focus on WHAT to prove, not HOW to code it
@@ -236,7 +185,6 @@ For each component in PLAN.md:
 
 ## Verification
 
-After generating tasks, ask yourself:
 - ✅ Can all tasks start simultaneously?
 - ✅ Does each task use generic test data?
 - ✅ Is testing strategy clearly defined?
@@ -245,12 +193,11 @@ After generating tasks, ask yourself:
 
 ## Linear Sync (if linear.yaml exists)
 
-After writing local TASK-P1-*.md files, mirror each as a Linear issue so the team can see and assign the work.
+After writing local TASK-P1-*.md files, mirror each as a Linear issue.
 
 ### Detection
 
 ```bash
-# $LINEAR_FILE was already computed in Setup as $SPEC_DIR/linear.yaml
 [[ -f "$LINEAR_FILE" ]] || skip Linear sync
 ```
 
@@ -261,7 +208,7 @@ If `linear.yaml` is absent, skip Linear sync entirely (local-only mode).
 Requires `mcp__linear-server__*`. If unreachable:
 ```
 ❌ Linear MCP not reachable. Local tasks were written, but Linear issues were NOT created.
-   Run /norm-sync-linear later to retry, or fix MCP and re-run /norm-research.
+   Fix MCP and re-run /design-kit:research-tasks.
 ```
 Do not silently continue.
 
@@ -281,13 +228,11 @@ Do not silently continue.
 
 ### Issue body template
 
-Each issue body must contain:
-
 ```markdown
 ## Source artifacts
 
 - **Master plan**: [<doc-title>](<plan_doc_url>)
-- **Local task file** (for tools, on any machine that has the project bound): `~/.claude/specs/<slug>/tasks/<TASK-FILE>.md`
+- **Local task file**: `~/.claude/specs/<slug>/tasks/<TASK-FILE>.md`
 
 ## How to use this issue
 
@@ -324,13 +269,12 @@ In `~/.claude/specs/<slug>/proofs/<component>/`:
 
 ### Idempotency
 
-Re-running `/norm-research` on an already-bound plan must not create duplicate Linear issues. Use `issue_map` to detect existing issues and update them in place via `save_issue` with `id`.
+Re-running `/design-kit:research-tasks` on an already-bound plan must not create duplicate Linear issues. Use `issue_map` to detect existing issues and update them in place via `save_issue` with `id`.
 
 ## Next Steps
 
 After tasks are generated:
 - Agent(s) execute Phase 1 tasks independently (locally and/or pulling Linear issues)
 - Each produces CONTRACT.md + TESTING.md + sufficient test runs to validate requirements
-- Review all FEEDBACK.md files
-- Update PLAN.md if discoveries warrant changes (and re-sync the Linear doc)
-- Then run `/norm-integrate` for Phase 2
+- Run `/design-kit:replan-after-research` to fold FEEDBACK into PLAN
+- Then run `/design-kit:integration-tasks` for Phase 2

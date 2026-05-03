@@ -1,269 +1,168 @@
 # Design-Kit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-plugin-blue.svg)](https://docs.claude.com/en/docs/claude-code)
 
 > Test-driven, parallel-execution framework for building complex systems with confidence
 
-**Stop sequential debugging. Start parallel validation.**
-
-Design-Kit is a revolutionary workflow framework for Claude AI that transforms how you build complex systems. Instead of the traditional "build → test → debug" cycle, it introduces a **prove-then-integrate** approach where components are validated independently before integration.
+Design-Kit is a Claude Code plugin that turns the "build → test → debug" cycle into a **prove-then-integrate** workflow. Components are validated in isolation against generic data first, then integrated against the real system using contracts only.
 
 ## Why Design-Kit?
 
-Traditional development is inherently sequential and slow:
+Traditional development is sequential and slow:
 ```
 Plan → Build → Test → Debug → Fix → Repeat (6-12 weeks)
 ```
 
 Design-Kit enables parallel execution and reduces risk:
 ```
-Plan → Prove (parallel) → Integrate with contracts (2-4 weeks)
+Plan → Prove (parallel) → Replan → Integrate (with contracts) → 2-4 weeks
 ```
 
-### Key Benefits
+### Key benefits
 
-- **3x Faster Development**: Independent proofs run in parallel, not sequentially
-- **Zero Integration Surprises**: Validate approaches in isolation before integration
-- **Contract-Based Design**: Black-box integration via `CONTRACT.md` reduces coupling
-- **Test-First Mindset**: 100+ diverse tests BEFORE documentation
-- **Automatic Context Switching**: One plan per git branch, automatic workspace management
+- **Independent proofs run in parallel**, not sequentially
+- **Zero integration surprises** — approaches validated in isolation first
+- **Contract-based design** via `CONTRACT.md` reduces coupling
+- **Test-first** — diverse test runs precede documentation
+- **Phase 1.5 gate** — discoveries fold back into the plan before integration starts
 
-## Quick Start
+## Install
 
-### Installation
+Design-Kit is distributed through the [aiverse](https://github.com/Piotr1215/aiverse) Claude Code marketplace.
 
-```bash
-git clone https://github.com/Piotr1215/design-kit.git
-cd design-kit
-./install.sh
+```
+/plugin marketplace add Piotr1215/aiverse
+/plugin install design-kit@aiverse
 ```
 
-### Your First Workflow
+That's it. No clone, no install script. Updates ship through the marketplace.
 
-```bash
-# Start a new feature branch
-git checkout -b feature-auth-improvements
+## Quick start
 
-# Lost? Run this any time. It prints where the project stands and the next command.
-/norm-status
+```
+# Lost? This always tells you the next command to run.
+/design-kit:status
 
-# Create master plan
-/norm-plan "Improve API authentication with OAuth2 + rate limiting"
+# Create a master plan (binds this repo to a project slug under ~/.claude/specs/)
+/design-kit:plan "Improve API authentication with OAuth2 + rate limiting"
 
-# Generate Phase 1 parallel proof tasks
-/norm-research
+# Generate Phase 1 parallel proof tasks (one per component)
+/design-kit:research-tasks
 
-# Claude executes all proofs independently
-# Each produces CONTRACT.md + TESTING.md + 100+ test runs
+# Agents execute proofs independently — each produces CONTRACT.md + TESTING.md + FEEDBACK.md
 
-# Phase 1.5 — synthesize FEEDBACK.md across proofs, propose plan/schema deltas,
-# write the marker /norm-integrate gates on. NOT optional.
-/norm-replan
+# Phase 1.5 — synthesize FEEDBACK across proofs into PLAN deltas. NOT optional.
+/design-kit:replan-after-research
 
 # Generate Phase 2 integration tasks (refuses to run without the Phase 1.5 marker)
-/norm-integrate
+/design-kit:integration-tasks
 
-# Claude integrates proven components with real system
+# Agents integrate proven components with the real system
 ```
 
-## How It Works
+## Three-phase flow
 
-### The Three-Phase Flow
+### Phase 1 — research (parallel)
 
-#### Phase 1: Research (Parallel)
-All tasks run **simultaneously** with zero dependencies:
-- Each proves ONE component works in isolation
-- Uses generic/sample test data (NOT real system)
-- Produces `CONTRACT.md` + `TESTING.md` + 100+ automated test runs
-- **Done when**: All proofs have ≥98% pass rate
+All tasks run **simultaneously** with zero dependencies. Each proves ONE component works in isolation against generic test data. Deliverables per proof:
 
-#### Phase 1.5: Feedback Loop — peer phase, not optional
+- `CONTRACT.md` — black-box interface
+- `TESTING.md` — validation strategy + pass criteria
+- `FEEDBACK.md` — surprises and discoveries
+- `run.sh` — automated harness (exits 0/1, writes `results/summary.json`)
 
-`/norm-replan` synthesizes every `FEEDBACK.md` from Phase 1, proposes deltas to `PLAN.md` (and `SCHEMA.md` if you froze a contract), gets your confirmation, and writes a `.phase-1.5-complete` marker.
+### Phase 1.5 — feedback loop (peer phase, not optional)
 
-- `/norm-integrate` **refuses to run** without that marker, and refuses if `PLAN.md` or any `FEEDBACK.md` is newer than the marker
-- This is the most common failure mode of the kit: discoveries from research never propagate to the plan, and Phase 2 gets generated against an outdated draft
-- Re-run `/norm-replan` any time a Phase 1 proof is refined — the gate is timestamp-aware
+`/design-kit:replan-after-research` synthesizes every `FEEDBACK.md` from Phase 1, proposes deltas to `PLAN.md` (and `SCHEMA.md` if you froze a contract), gets your confirmation, and writes `.phase-1.5-complete`.
 
-#### Phase 2: Integration
-Connect proven components to actual system:
-- References ONLY `CONTRACT.md` + `TESTING.md` (black-box)
-- Re-runs Phase 1 test harness with REAL system data
-- Creates REFINEMENT tasks if contract gaps found
+- `/design-kit:integration-tasks` **refuses to run** without that marker, and refuses if `PLAN.md`, `SCHEMA.md`, or any `FEEDBACK.md` is newer than the marker.
+- Most common failure mode of the kit: discoveries from research never propagate to the plan, and Phase 2 gets generated against a stale draft. The gate prevents this.
+- Re-run `/design-kit:replan-after-research` any time a Phase 1 proof is refined.
 
-### Workspace Structure
+### Phase 2 — integration
 
-Each project gets a global, slug-keyed home. Multiple repos and branches share one project.
+Connect proven components to the real system using **only** `CONTRACT.md` + `TESTING.md` (never the proof's internals). Re-run the Phase 1 harness against real data. If contract gaps surface, create a refinement task instead of working around them.
+
+## Workspace model
+
+Plans live globally, not per-repo. Multiple repos and branches can share one project.
 
 ```
 ~/.claude/specs/
-├── docs-config-automation-improvements/
-│   ├── PLAN.md           # Master plan with phases
-│   ├── linear.yaml       # (optional) Linear binding metadata
-│   ├── proofs/           # Phase 1 proof-of-concepts
-│   │   ├── pdf-gen/
-│   │   │   ├── run.sh           # Automated test harness
-│   │   │   ├── CONTRACT.md      # Integration interface
-│   │   │   ├── TESTING.md       # Validation strategy
-│   │   │   ├── FEEDBACK.md      # Discoveries
-│   │   │   └── results/         # Test outputs
-│   │   └── auth-api/
-│   └── tasks/            # Task definitions
-└── another-project/
-    ├── PLAN.md
-    ├── proofs/
-    └── tasks/
+└── <slug>/
+    ├── PLAN.md              # master plan
+    ├── linear.yaml          # (optional) Linear binding metadata
+    ├── .phase-1.5-complete  # gate marker, written by /design-kit:replan-after-research
+    ├── proofs/              # Phase 1 proof-of-concepts
+    │   └── <component>/
+    │       ├── run.sh
+    │       ├── CONTRACT.md
+    │       ├── TESTING.md
+    │       ├── FEEDBACK.md
+    │       └── results/
+    └── tasks/               # TASK-P1-* and TASK-P2-* files
 ```
 
-**Each repo participating in a project drops a pointer** so the kit knows which project applies when commands run from that repo:
+Each repo participating in a project drops a pointer file:
 
 ```
 <repo>/.claude/current-project    # plain text, single line: the slug
 ```
 
-Multiple repos can point at the same project — that's the cross-repo coordination model. Branch is no longer the anchor; it's just metadata about which Linear issue is in flight.
+Multiple repos can point at the same slug — that's the cross-repo coordination model. To bind a second repo to an existing project:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-connect-design.sh" --init <slug>
+```
+
+To switch the active project for the current repo, re-run the same command with a different slug. The old spec dir is untouched.
+
+### Multi-spec discovery
+
+Run `/design-kit:status all` to list every spec under `~/.claude/specs/` with phase + last-touched timestamp. Useful when you have multiple projects in flight and need to remember what's where.
 
 ## Commands
 
-| Command | Purpose | Output |
-|---------|---------|--------|
-| `/norm-status` | **Where am I?** Read-only state inspection + next-command suggestion | Status block, no edits |
-| `/norm-plan` | Create master plan with component breakdown | `PLAN.md` with phases |
-| `/norm-research` | Generate Phase 1 parallel proof tasks | Independent `TASK-P1-*.md` files |
-| `/norm-replan` | **Phase 1.5** — synthesize FEEDBACK across proofs, propose plan/schema deltas | Updated `PLAN.md` + `.phase-1.5-complete` marker |
-| `/norm-integrate` | Generate Phase 2 integration tasks (gated on Phase 1.5 marker) | Integration `TASK-P2-*.md` files |
-| `/norm-tasks` | List all tasks with paths and status | Organized list of all tasks |
-| `/norm-task [ID]` | View/work on specific task (e.g., `/norm-task A`) | Full task content with context |
+| Command | Purpose |
+|---------|---------|
+| `/design-kit:status` | Where am I? Read-only state inspection. Accepts free-form args: empty (current project), `all` (all projects), `tasks` (list tasks), task ID (view one task). |
+| `/design-kit:plan` | Create master plan with component breakdown. Binds the repo to a project slug. |
+| `/design-kit:research-tasks` | Generate Phase 1 parallel proof tasks (`TASK-P1-*.md`). |
+| `/design-kit:replan-after-research` | Phase 1.5 — synthesize FEEDBACK across proofs, propose plan/schema deltas, write the marker. |
+| `/design-kit:integration-tasks` | Generate Phase 2 integration tasks (`TASK-P2-*.md`). Gated on the Phase 1.5 marker. |
 
-**If you forget which command to run next:** `/norm-status`. It inspects the project, prints the state, and recommends the next command.
+If you forget which command to run next: `/design-kit:status`. It inspects the project, prints the state, and recommends the next command.
 
-## Core Principles
+## Core principles
 
-### 1. Testing is the Primary Deliverable
-**NOT**: Write 1000 lines of testing philosophy → Run 3 tests → Done
-**CORRECT**: Design minimal test strategy → Run 100+ diverse tests → Document from evidence
+1. **Testing is the primary deliverable.** Design effective tests first; documentation comes from empirical evidence, not philosophy.
+2. **100% parallelism in Phase 1.** Independent components, generic test data, zero cross-task dependencies.
+3. **Contract-based integration.** Phase 2 references `CONTRACT.md` and `TESTING.md` only — never proof internals.
+4. **Automated validation.** Every proof's `run.sh` exits 0/1 and produces `results/summary.json` + per-test logs.
+5. **Requirement-driven coverage.** Test counts come from what can fail, not arbitrary numbers.
 
-### 2. 100% Parallelism in Phase 1
-All Phase 1 tasks must be executable simultaneously:
-- ✅ Independent components with generic test data
-- ✅ Zero cross-task dependencies
-- ❌ NO integration with actual system (that's Phase 2)
-
-### 3. Contract-Based Integration
-Phase 2 integration uses ONLY:
-- `CONTRACT.md` - Interface/API specification
-- `TESTING.md` - Validation strategy
-- NEVER internal implementation details
-
-### 4. Automated Validation
-Every Phase 1 proof must implement:
-- `run.sh` exits 0 on success, 1 on failure
-- `results/summary.json` with pass/fail metrics
-- `results/logs/*.json` with individual test details
-
-## Real-World Example
-
-Building a REST API with OAuth2 + PDF generation:
-
-**Traditional Approach (Sequential)**:
-1. Week 1: Build OAuth2 implementation
-2. Week 2: Build PDF generator
-3. Week 3: Integrate both
-4. Week 4: Debug integration issues
-5. Week 5: Fix OAuth2 edge cases
-6. Week 6: Fix PDF rendering bugs
-
-**Design-Kit Approach (Parallel)**:
-1. Day 1: Create plan with 2 components
-2. Week 1: **Parallel execution**
-   - Prove OAuth2 validation works (100+ tests with sample tokens)
-   - Prove PDF generation works (100+ tests with sample HTML)
-3. Week 2: Integrate both with real system using contracts
-4. Done in 2 weeks vs 6 weeks
-
-## Who Should Use Design-Kit?
-
-**Perfect for**:
-- Complex systems with multiple independent components
-- Teams needing to explore uncertain technical approaches
-- Projects requiring high quality and reliability
-- Parallel development workflows
-
-**Not ideal for**:
-- Single-file changes or trivial updates
-- Well-understood problems with clear solutions
-- Quick prototypes or experiments
-- Time-sensitive hotfixes
-
-## Linear Integration (optional)
+## Linear integration (optional)
 
 If your project lives in a Linear workspace, the kit can mirror plans and tasks to Linear so the team sees the same source of truth. Local files remain the toolchain's working artifacts; Linear is the visible mirror that agents can also pull from when working off a Linear issue.
 
-**How it works:**
+How it works:
 
-1. `/norm-plan` (when bound) creates a Linear document attached to the project, captures project + milestone IDs in `.claude/specs/<branch>/linear.yaml`
-2. `/norm-research` mirrors each Phase 1 task as a Linear issue in the `research_milestone` (default: M1)
-3. `/norm-integrate` mirrors each Phase 2 task as a Linear issue in the `integrate_milestone` (default: M3)
+1. `/design-kit:plan` (when bound) creates a Linear document attached to the project, captures project + milestone IDs in `~/.claude/specs/<slug>/linear.yaml`
+2. `/design-kit:research-tasks` mirrors each Phase 1 task as a Linear issue in `research_milestone` (default M1)
+3. `/design-kit:integration-tasks` mirrors each Phase 2 task in `integrate_milestone` (default M3)
 
-Each Linear issue includes a standard header pointing back to the plan document and the local task file. Agents working from a Linear issue link can pull the plan from Linear without local-machine access.
+Each Linear issue includes a header pointing back to the plan document and the local task file. To skip Linear sync for a particular plan, pass `LINEAR_SKIP=1` when running `/design-kit:plan`.
 
-**Requirements:**
-
-- `mcp__linear-server__*` tools available (Claude's Linear MCP integration)
-- A Linear project to bind to
-
-**To skip Linear sync** for a particular plan, pass `LINEAR_SKIP=1` when running `/norm-plan`.
-
-See [linear-binding.md](templates/linear-binding.md) for the full pattern: sidecar schema, lifecycle, issue body templates, and MCP requirements.
+See [linear-binding.md](templates/linear-binding.md) for the full pattern.
 
 ## Documentation
 
-- **[Design-Driven Development Philosophy](design-driven.md)** - Deep dive into the methodology
-- **[Linear Project Binding](templates/linear-binding.md)** - Optional mirror to a Linear project
-- **[Installation Guide](install.sh)** - Detailed setup instructions
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
-- **[Changelog](CHANGELOG.md)** - Version history
-
-## Comparison with Other Approaches
-
-| Approach | Parallelism | Testing | Integration | Iteration Speed |
-|----------|-------------|---------|-------------|-----------------|
-| Traditional TDD | Sequential | After code | Ad-hoc | Slow |
-| Behavior-Driven | Sequential | Scenarios first | Coupled | Medium |
-| **Design-Kit** | **Parallel** | **100+ runs first** | **Contract-based** | **Fast** |
-
-## Philosophy
-
-Traditional development follows a linear path plagued by late-stage surprises.
-
-Design-Kit inverts this: **Prove components work independently first**, THEN integrate.
-
-**Key insight**: Validate approaches in isolation BEFORE integration. The feedback loop is faster, failures are isolated, and contracts reduce coupling.
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Quick Contribution Ideas
-- Share your workflow examples in `examples/`
-- Improve documentation and guides
-- Add test harness templates
-- Report bugs and suggest features
-
-## Community & Support
-
-- **Issues**: [GitHub Issues](https://github.com/Piotr1215/design-kit/issues)
-- **Discussions**: Share your workflows and ask questions
-- **PRs**: Contributions are always welcome!
+- [Design-Driven Development Philosophy](design-driven.md) — methodology deep-dive
+- [Linear Project Binding](templates/linear-binding.md) — sidecar schema, lifecycle, MCP requirements
+- [Contributing Guide](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-**Design-Kit**: Build complex systems with confidence through parallel validation.
-
-*Powered by Claude AI*
+MIT — see [LICENSE](LICENSE).

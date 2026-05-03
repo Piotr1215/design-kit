@@ -1,9 +1,9 @@
 ---
-name: norm-plan
-description: "Create master plan with phases (project, gitignored)"
+name: plan
+description: "Create a master implementation plan: components, three-phase breakdown, optional Linear binding"
 ---
 
-Create a master implementation plan following the norm philosophy: test-driven, parallel execution, contract-based integration.
+Create a master implementation plan following the design-kit philosophy: test-driven, parallel execution, contract-based integration.
 
 ## Setup
 
@@ -15,7 +15,7 @@ Create a master implementation plan following the norm philosophy: test-driven, 
 SLUG="<derived-or-prompted>"
 
 # 2. Bind this repo to the project (creates global spec dir + local pointer)
-~/.claude/design-kit/auto-connect-design.sh --init "$SLUG"
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-connect-design.sh" --init "$SLUG"
 
 # 3. Compute paths
 SPEC_DIR="$HOME/.claude/specs/$SLUG"
@@ -31,7 +31,7 @@ if [[ -f "$PLAN_FILE" ]]; then
 fi
 ```
 
-**Path model**: plans are stored globally at `~/.claude/specs/<slug>/`, not per-branch in the current repo. Each repo that participates in the project drops a pointer file `<repo>/.claude/current-project` containing the slug. This means multiple repos and multiple branches can share one plan — Phase 1 proofs and Phase 2 task files all live in the global location.
+**Path model**: plans are stored globally at `~/.claude/specs/<slug>/`, not per-branch in the current repo. Each repo that participates in the project drops a pointer file `<repo>/.claude/current-project` containing the slug. Multiple repos and multiple branches can share one plan — Phase 1 proofs and Phase 2 task files all live in the global location.
 
 ## Task Description
 
@@ -46,8 +46,6 @@ Given project requirements: `{ARGS}`
 3. Determine appropriate action based on findings
 
 ## Core Philosophy
-
-**This is critical - read carefully:**
 
 1. **Incremental Testing**: Start with happy path, add tests one-by-one, run ALL tests every time (catch regressions early)
 2. **Test-Driven**: Sufficient diverse test runs to validate requirements BEFORE writing documentation
@@ -119,10 +117,6 @@ For each component:
 
 **Focus on test design quality and incremental development over arbitrary test counts.**
 
-**Real Engineering**: Research within guardrails → test iteratively → validate → integrate → iterate based on findings.
-
-**Knowledge Sharing**: Agents MUST check memory for proven patterns BEFORE setup, and ADD novel harnesses TO memory AFTER creation.
-
 ## Success Criteria
 
 Phase 1 complete when:
@@ -146,11 +140,11 @@ Phase 2 complete when:
 
 ## Linear Project Binding (after PLAN.md is written)
 
-The kit can mirror the plan to a Linear project so the team sees the same source of truth. Local files remain the working artifacts (norm-research, norm-integrate read from disk); Linear is the visible mirror that agents can also pull from when working off a Linear issue.
+The kit can mirror the plan to a Linear project so the team sees the same source of truth. Local files remain the working artifacts (`/design-kit:research-tasks`, `/design-kit:integration-tasks` read from disk); Linear is the visible mirror that agents can also pull from when working off a Linear issue.
 
 ### Detection (in order)
 
-1. **Existing sidecar**: `.claude/specs/$BRANCH/linear.yaml` — already bound, update the doc
+1. **Existing sidecar**: `$SPEC_DIR/linear.yaml` — already bound, update the doc
 2. **Args**: parse a `linear.app/.../project/<slug>` URL from `{ARGS}`
 3. **Env var**: `LINEAR_PROJECT_ID` set
 4. **Prompt user**: "Linear project to bind (name, URL, ID, or 'skip')?"
@@ -173,9 +167,9 @@ The kit can mirror the plan to a Linear project so the team sees the same source
      M1: <uuid>                # name → id mapping
      M2: <uuid>
      M3: <uuid>
-   research_milestone: M1      # /norm-research issues land here
-   integrate_milestone: M3     # /norm-integrate issues land here
-   issue_map: {}               # filled in by /norm-research and /norm-integrate
+   research_milestone: M1      # /design-kit:research-tasks issues land here
+   integrate_milestone: M3     # /design-kit:integration-tasks issues land here
+   issue_map: {}               # filled in by /design-kit:research-tasks and /design-kit:integration-tasks
    ```
 4. Echo: `Plan synced to Linear: <plan_doc_url>`
 
@@ -195,9 +189,9 @@ Exit non-zero so the user notices.
 
 If user passes `LINEAR_SKIP=1` or answers "skip": work local-only. PLAN.md still written. No sidecar created.
 
-### What gets put inside a Linear issue (referenced from /norm-research and /norm-integrate)
+### What gets put inside a Linear issue (referenced from `/design-kit:research-tasks` and `/design-kit:integration-tasks`)
 
-Every Linear issue created by the toolchain must include this header so the executing agent knows where to find shared context:
+Every Linear issue created by the toolchain must include this header:
 
 ```markdown
 ## Source artifacts
@@ -216,7 +210,7 @@ Every Linear issue created by the toolchain must include this header so the exec
 ## Next Steps
 
 After PLAN.md is created and (optionally) Linear-bound:
-- Run `/norm-research` to generate Phase 1 parallel proof tasks (also creates Linear issues if bound)
+- Run `/design-kit:research-tasks` to generate Phase 1 parallel proof tasks
 - Complete all Phase 1 tasks independently
-- Review feedback, update PLAN.md if needed (and re-sync to Linear doc)
-- Run `/norm-integrate` to generate Phase 2 integration tasks
+- Run `/design-kit:replan-after-research` to fold FEEDBACK into PLAN
+- Run `/design-kit:integration-tasks` to generate Phase 2 integration tasks
