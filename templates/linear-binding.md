@@ -7,9 +7,9 @@ Optional but recommended pattern: mirror a design-kit plan to a Linear project s
 - **Global spec storage**: `~/.claude/specs/<slug>/` — one directory per project, machine-wide. Holds PLAN.md, tasks/, proofs/, and `linear.yaml`.
 - **Per-repo pointer**: `<repo>/.claude/current-project` — plain text file, single line: the project slug. Repos opt-in to a project by dropping this pointer.
 - **Linear** is the visible mirror. The team sees progress, assigns issues, comments, and reviews. Agents working from a Linear issue link can pull the plan and component instructions without local-machine access.
-- All three stay in sync through the `/norm-*` commands.
+- All three stay in sync through the `/design-kit:*` commands.
 
-This is *not* a replacement for the local toolchain — `/norm-research` and `/norm-integrate` still need local files to read PLAN.md and write task files. Linear is an additional source/target for the same information.
+This is *not* a replacement for the local toolchain — `/design-kit:research-tasks` and `/design-kit:integration-tasks` still need local files to read PLAN.md and write task files. Linear is an additional source/target for the same information.
 
 ## Why global-spec + per-repo pointer
 
@@ -23,7 +23,7 @@ Global slug-keyed storage solves this. Each repo just carries a small pointer fi
 
 ## Sidecar: `~/.claude/specs/<slug>/linear.yaml`
 
-Created by `/norm-plan`, read by `/norm-research` and `/norm-integrate`.
+Created by `/design-kit:plan`, read by `/design-kit:research-tasks` and `/design-kit:integration-tasks`.
 
 ```yaml
 project_id: bc719c01-6c79-4e01-8e5a-4ec947bfb176
@@ -35,12 +35,12 @@ milestones:
   M1: d6c4fc90-59d5-4590-bc6f-c449e4354117  # Architectural foundation
   M2: d722ce07-9455-4b57-aebe-31ff8e87ab0c  # Pipeline parity
   M3: e2a48a14-9a83-4b2d-849a-50b614609f85  # Unification & auto-approve
-research_milestone: M1     # /norm-research issues land here
-integrate_milestone: M3    # /norm-integrate issues land here
+research_milestone: M1     # /design-kit:research-tasks issues land here
+integrate_milestone: M3    # /design-kit:integration-tasks issues land here
 issue_map:
-  TASK-P1-A1: DEVOPS-867   # populated by /norm-research
+  TASK-P1-A1: DEVOPS-867   # populated by /design-kit:research-tasks
   TASK-P1-A2: DEVOPS-868
-  TASK-P2-C: DEVOPS-870    # populated by /norm-integrate
+  TASK-P2-C: DEVOPS-870    # populated by /design-kit:integration-tasks
 ```
 
 The `issue_map` is what makes resyncs idempotent — each command checks the map before creating, and updates in place if the entry exists.
@@ -50,8 +50,8 @@ The `issue_map` is what makes resyncs idempotent — each command checks the map
 The slug is the machine-wide project identifier and the directory name under `~/.claude/specs/`.
 
 - **From Linear project name**: kebab-case the project name. `"docs config automation improvements"` → `docs-config-automation-improvements`.
-- **From CLI arg**: `/norm-plan --slug <name>` overrides.
-- **From prompt**: if neither, `/norm-plan` asks the user.
+- **From CLI arg**: `/design-kit:plan --slug <name>` overrides.
+- **From prompt**: if neither, `/design-kit:plan` asks the user.
 
 Slugs allow `[a-zA-Z0-9._-]`. Validation in `auto-connect-design.sh --init`.
 
@@ -59,9 +59,9 @@ Slugs allow `[a-zA-Z0-9._-]`. Validation in `auto-connect-design.sh --init`.
 
 | Command | Linear actions |
 |---|---|
-| `/norm-plan` | Determine slug, run `auto-connect-design.sh --init <slug>` (creates `~/.claude/specs/<slug>/` and writes `<repo>/.claude/current-project`), write PLAN.md, create or update Linear document, capture milestone IDs into `linear.yaml`. |
-| `/norm-research` | Resolve `<slug>` from pointer, read PLAN.md, write `TASK-P1-*.md` to `<spec-dir>/tasks/`. For each task, create or update a Linear issue in `research_milestone`. Issue body links to plan doc and tells the agent to pull from there. |
-| `/norm-integrate` | Same pattern, target milestone is `integrate_milestone`. Issue body points to Phase 1 CONTRACT.md / TESTING.md (in the global spec dir) and the plan doc. |
+| `/design-kit:plan` | Determine slug, run `auto-connect-design.sh --init <slug>` (creates `~/.claude/specs/<slug>/` and writes `<repo>/.claude/current-project`), write PLAN.md, create or update Linear document, capture milestone IDs into `linear.yaml`. |
+| `/design-kit:research-tasks` | Resolve `<slug>` from pointer, read PLAN.md, write `TASK-P1-*.md` to `<spec-dir>/tasks/`. For each task, create or update a Linear issue in `research_milestone`. Issue body links to plan doc and tells the agent to pull from there. |
+| `/design-kit:integration-tasks` | Same pattern, target milestone is `integrate_milestone`. Issue body points to Phase 1 CONTRACT.md / TESTING.md (in the global spec dir) and the plan doc. Refuses to run unless `.phase-1.5-complete` marker is present and fresh (mtime newer than PLAN.md/SCHEMA.md/FEEDBACK.md). |
 
 ## What goes inside a Linear issue
 
@@ -88,10 +88,10 @@ The component-specific body (goal, testing strategy, deliverables) follows.
 A worker on a different repo (e.g. `loft-enterprise`) needs the same project context. They run:
 
 ```bash
-~/.claude/design-kit/auto-connect-design.sh --init docs-config-automation-improvements
+"${CLAUDE_PLUGIN_ROOT}/scripts/auto-connect-design.sh" --init docs-config-automation-improvements
 ```
 
-This drops a pointer in their current repo and ensures the global spec dir exists. They can now run `/norm-research`, `/norm-integrate`, etc. from that repo and resolve to the same plan.
+This drops a pointer in their current repo and ensures the global spec dir exists. They can now run `/design-kit:research-tasks`, `/design-kit:integration-tasks`, etc. from that repo and resolve to the same plan.
 
 ## MCP dependency
 
@@ -104,7 +104,7 @@ There is no GraphQL/CLI fallback. Keeping the surface area small — one tool fa
 
 ## Skipping the binding
 
-To work fully local (no Linear involvement on a particular plan): pass `LINEAR_SKIP=1` when running `/norm-plan`. The command still creates `~/.claude/specs/<slug>/` and the per-repo pointer; it just doesn't create `linear.yaml` or call any Linear MCP tools. Downstream commands skip Linear sync entirely.
+To work fully local (no Linear involvement on a particular plan): pass `LINEAR_SKIP=1` when running `/design-kit:plan`. The command still creates `~/.claude/specs/<slug>/` and the per-repo pointer; it just doesn't create `linear.yaml` or call any Linear MCP tools. Downstream commands skip Linear sync entirely.
 
 ## Conventions on milestone mapping
 

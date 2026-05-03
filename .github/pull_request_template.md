@@ -19,10 +19,12 @@ List the specific changes made in this PR:
 
 ## Testing
 Describe how you tested these changes:
-- [ ] Tested `install.sh`
-- [ ] Tested `/norm-plan` command
-- [ ] Tested `/norm-research` command
-- [ ] Tested `/norm-integrate` command
+- [ ] Installed via `/plugin install design-kit@aiverse`
+- [ ] Tested `/design-kit:plan` command
+- [ ] Tested `/design-kit:research-tasks` command
+- [ ] Tested `/design-kit:replan-after-research` command
+- [ ] Tested `/design-kit:integration-tasks` command
+- [ ] Tested `/design-kit:status` command
 - [ ] Tested with a real workflow
 - [ ] Updated/added documentation
 
