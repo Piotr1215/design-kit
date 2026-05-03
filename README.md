@@ -1,5 +1,21 @@
 # Design-Kit
 
+> [!IMPORTANT]
+> **This repository is archived.** Design-Kit now lives bundled inside the
+> [aiverse marketplace](https://github.com/Piotr1215/aiverse) at
+> [`plugins/design-kit/`](https://github.com/Piotr1215/aiverse/tree/main/plugins/design-kit).
+> All future development, releases, and issues happen there.
+>
+> Install (unchanged):
+>
+> ```
+> /plugin install design-kit@aiverse
+> ```
+>
+> The content below is preserved for historical reference only.
+
+---
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-plugin-blue.svg)](https://docs.claude.com/en/docs/claude-code)
 

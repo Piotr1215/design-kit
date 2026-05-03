@@ -1,40 +1,43 @@
 # Releasing design-kit
 
-The aiverse marketplace tracks design-kit's `main` branch. Pushing to
-main ships the change to all users on their next marketplace refresh.
+> [!IMPORTANT]
+> **This repository is archived.** Releases now happen in the
+> [aiverse marketplace](https://github.com/Piotr1215/aiverse).
+> Do not bump versions or push commits here — they will not ship.
 
-## Steps
+## Where to release
 
-1. Bump `version` in `.claude-plugin/plugin.json` (e.g. `0.1.3` → `0.1.4`).
-2. Commit and push to `main`:
+design-kit lives bundled at `Piotr1215/aiverse/plugins/design-kit/`.
+The aiverse marketplace tracks its own `main` branch.
 
-   ```bash
-   git add .claude-plugin/plugin.json <other-changed-files>
-   git commit -m "<conventional message>"
-   git push origin main
-   ```
+## Steps (perform in `Piotr1215/aiverse`)
 
-That's it. No tags, no marketplace edit, no aiverse PR.
+1. Edit files under `plugins/design-kit/`.
+2. Bump `plugins/design-kit/.claude-plugin/plugin.json` `version`.
+3. Bump `.claude-plugin/marketplace.json` `version` for the design-kit
+   entry — must match the value in `plugin.json`.
+4. `npm run validate` (verifies schema, catches drift).
+5. `git commit && git push origin main`.
 
-## Why bump `plugin.json` version
+That's it. No tags, no cross-repo coordination.
 
-Auto-update detects new payloads by comparing the cached plugin
-manifest's `version` against the resolved one. If you don't bump it,
-users on the prior version see no delta and stay on stale code even
-after the marketplace catalog refreshes.
+## Why both files need to bump
 
-If you only changed docs or comments and don't care if users pick up
-the change immediately, you can skip the bump — the next real release
-will sweep it along with the SHA delta.
+`plugin.json` is the manifest the plugin ships with.
+`marketplace.json` is the catalog clients compare against for cache
+invalidation. If they drift, auto-update silently no-ops because the
+manifest version comparison shows no delta. Both bump in lockstep, in
+the same commit, every time.
 
-## Auto-update isn't always automatic
+## Why this repo was archived
 
-`autoUpdate: true` on the marketplace doesn't reliably fire on every
-Claude Code restart. If users want the change immediately, they can
-force a refresh:
+The previous external-source pattern (`source: {github, repo, branch:main}`
+in aiverse with code living in this repo) created a cross-repo
+version-drift class of bug — the marketplace.json `version` field had
+to be manually kept in sync with this repo's `plugin.json`, and when
+they drifted, auto-update broke for users with no clear signal why.
 
-```
-/plugin marketplace update aiverse
-```
-
-This is a Claude Code limitation, not a design-kit concern.
+Bundling design-kit into aiverse matches what every other public plugin
+marketplace does (anthropics/skills, anthropics/claude-code,
+loft-sh/ai-skills) and makes drift impossible: plugin code and
+marketplace catalog land in the same commit on the same repo.
