@@ -1,34 +1,40 @@
 # Releasing design-kit
 
-Plugin auto-update reads `version` from `.claude-plugin/plugin.json`.
-If that field doesn't change, installs stay on the cached payload — even
-if the marketplace pin moves to a new tag.
+The aiverse marketplace tracks design-kit's `main` branch. Pushing to
+main ships the change to all users on their next marketplace refresh.
 
 ## Steps
 
-Bump `X` to the new version (e.g. `0.1.4`).
-
-1. Edit `.claude-plugin/plugin.json` — set `"version": "X"`.
-2. Commit, tag, push:
+1. Bump `version` in `.claude-plugin/plugin.json` (e.g. `0.1.3` → `0.1.4`).
+2. Commit and push to `main`:
 
    ```bash
-   git add .claude-plugin/plugin.json
-   git commit -m "chore(plugin): bump version to X"
-   git tag -a vX -m "vX"
+   git add .claude-plugin/plugin.json <other-changed-files>
+   git commit -m "<conventional message>"
    git push origin main
-   git push origin vX
    ```
 
-3. In `Piotr1215/aiverse`, update `.claude-plugin/marketplace.json` —
-   set both `source.branch` and `version` for the design-kit entry to
-   `vX` and `X` respectively. Commit and push.
+That's it. No tags, no marketplace edit, no aiverse PR.
 
-Auto-update picks up the new version on the next Claude Code restart
-for any user with `autoUpdate: true` on the aiverse marketplace.
+## Why bump `plugin.json` version
 
-## Why both bumps matter
+Auto-update detects new payloads by comparing the cached plugin
+manifest's `version` against the resolved one. If you don't bump it,
+users on the prior version see no delta and stay on stale code even
+after the marketplace catalog refreshes.
 
-- `marketplace.json` `branch` → which git ref to fetch
-- `plugin.json` `version` → what triggers the cache refresh
+If you only changed docs or comments and don't care if users pick up
+the change immediately, you can skip the bump — the next real release
+will sweep it along with the SHA delta.
 
-Bump both, or auto-update silently no-ops.
+## Auto-update isn't always automatic
+
+`autoUpdate: true` on the marketplace doesn't reliably fire on every
+Claude Code restart. If users want the change immediately, they can
+force a refresh:
+
+```
+/plugin marketplace update aiverse
+```
+
+This is a Claude Code limitation, not a design-kit concern.
