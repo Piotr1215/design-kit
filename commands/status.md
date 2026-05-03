@@ -106,9 +106,11 @@ some-old-thing                    phase 1 in flight        2026-04-12 18:44     
 
 Bound to this repo: <slug or "—">
 
-Tip: `cd` into the repo whose pointer matches the slug, or run
-     ${CLAUDE_PLUGIN_ROOT}/scripts/auto-connect-design.sh --init <slug>
-     to point this repo at a different existing project.
+Tip: To bind this repo to one of the projects above, write the slug to its pointer file:
+
+     mkdir -p .claude && echo "<slug>" > .claude/current-project
+
+Or run `/design-kit:plan "<idea>"` to create a new project from scratch.
 ```
 
 `last-touched` = newest mtime among PLAN.md, marker, any TASK file. Best-effort.
