@@ -66,7 +66,7 @@ You are running Phase 1.5. Your job is **synthesis and reconciliation**, not new
 
 ### 1. Read everything
 
-- `PLAN.md` (current source of truth)
+- `PLAN.md` (current source of truth — preserve YAML frontmatter `slug` / `parent_spec` / `derived_from_task` verbatim across edits; lineage is not synthesis material)
 - `SCHEMA.md` (if present — frozen contract; gaps surface here)
 - Every `proofs/*/FEEDBACK.md`
 - Every `proofs/*/CONTRACT.md` (so you can spot drift between what the plan promised and what proofs delivered)

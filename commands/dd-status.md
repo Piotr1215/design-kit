@@ -55,6 +55,7 @@ Print one block. Keep it scannable.
 Project: <slug> (or "no project bound")
 Spec dir: <SPEC_DIR>
 Linear:   <yes — link / no>
+Lineage:  <root | parent=<slug> from-task=<TASK-P1-X-...>>
 
 State: <state name>
   - PLAN.md:       <yes/no> [mtime: <ISO>]
@@ -62,11 +63,20 @@ State: <state name>
   - Tasks:         <P1: N done / M total> | <P2: N done / M total>
   - Proofs:        <component: ✓ ✓ ✓ — CONTRACT TESTING FEEDBACK> per row
   - Phase 1.5:     <not run | done <ISO> | STALE — newer files: ...>
+  - Refinements:   <none | N active: TASK-P1-X-REFINEMENT-foo, ...>
 
 Next: <one-line recommended command, with example args>
 
 Why: <one sentence rationale based on what's missing>
 ```
+
+**Lineage** is read from PLAN.md frontmatter (`parent_spec`, `derived_from_task`).
+If frontmatter is absent (legacy plans pre-0.1.5) or both fields are null, show `root`.
+
+**Refinements** are `TASK-P1-*-REFINEMENT-*.md` files in `$SPEC_DIR/tasks/`. They
+indicate Phase 2 surfaced a contract gap and the spec is iterating Phase 1 work
+again. Surface them prominently so the open loop is visible — refinements are
+expected and normal, but invisible refinements rot.
 
 Per-proof row symbols:
 - `✓` = file present
@@ -174,3 +184,5 @@ After running:
 - ✅ User can read the recommended next command and run it as-is
 - ✅ Stale Phase 1.5 surfaced even when the marker exists
 - ✅ In multi-project mode, every directory under `~/.claude/specs/` is listed
+- ✅ Lineage row reflects PLAN.md frontmatter (or `root` when frontmatter absent)
+- ✅ Active refinements surfaced when present, omitted when none

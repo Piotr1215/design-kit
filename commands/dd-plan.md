@@ -45,6 +45,48 @@ Given project requirements: `{ARGS}`
 2. Check `$SPEC_DIR/tasks/` - any tasks exist?
 3. Determine appropriate action based on findings
 
+## SECOND: Search the Corpus
+
+**Before decomposing into components, mine prior research.** Every spec under
+`~/.claude/specs/` is a record of work the team has already done — proofs
+written, contracts hardened, surprises documented. New plans should stand on
+those shoulders, not start cold.
+
+After you've drafted the rough component list (in your head, not yet on disk),
+search the corpus for adjacent prior work:
+
+```bash
+# Find candidate prior proofs by keyword. Run for each component you intend to propose.
+grep -lri --include='CONTRACT.md' --include='FEEDBACK.md' \
+    -e '<keyword-1>' -e '<keyword-2>' \
+    "$HOME/.claude/specs/" 2>/dev/null | grep -v "^$SPEC_DIR/"
+```
+
+For each hit, read the `CONTRACT.md` (interface already proven) and the
+sibling `FEEDBACK.md` (gotchas already discovered). Decide:
+
+- **Reuse**: prior contract is sufficient → reference it in the new PLAN.md, don't re-prove
+- **Refine**: prior contract is close but needs extension → call out the delta, prove only the delta in Phase 1
+- **Independent**: no usable overlap → proceed normally
+
+Surface findings to the user before writing PLAN.md:
+
+```
+Corpus search for components: [token-validator, rate-limiter]
+
+Prior work found:
+  ~/.claude/specs/auth-rewrite/proofs/oauth-jwt/        — CONTRACT.md covers JWT validation (reusable)
+  ~/.claude/specs/api-hardening/proofs/redis-rate-limit/ — CONTRACT.md + FEEDBACK.md (gotcha: clock skew at boundaries)
+
+Reusing: oauth-jwt contract for token-validator (no Phase 1 task needed)
+New work: rate-limiter (extending redis-rate-limit pattern; new TASK-P1 will reference it)
+```
+
+If no prior work matches, say so explicitly: `Corpus search: no prior proofs match.` Don't be silent.
+
+The corpus is the system's compounding asset. Every spec written makes the
+next one cheaper. **Skipping this step wastes the team's accumulated knowledge.**
+
 ## Core Philosophy
 
 1. **Incremental Testing**: Start with happy path, add tests one-by-one, run ALL tests every time (catch regressions early)
@@ -57,13 +99,41 @@ Given project requirements: `{ARGS}`
 
 ## Create PLAN.md Structure
 
+### Lineage frontmatter
+
+PLAN.md begins with YAML frontmatter capturing where this spec came from. For
+**root specs**, both lineage fields are `null`. For **leaves** (a child spec
+spawned from a research task in a parent spec), they record the genealogy.
+
+How to detect lineage:
+
+1. Args contain `--parent <slug> --from-task <task-id>` → use directly
+2. Args contain a parent slug + task reference in prose → infer
+3. `pwd` is inside `~/.claude/specs/<some-slug>/` → propose `<some-slug>` as parent and ask the user which task spawned this child
+4. Otherwise → root spec, both `null`
+
+The leaves pattern is core to the system: a single research task can grow
+its own three-phase pipeline. Capturing parent + originating task is what
+makes those branches walkable later.
+
+### Template
+
 Write to `$SPEC_DIR/PLAN.md`:
 
 ```markdown
+---
+slug: <slug>
+parent_spec: <parent-slug-or-null>
+derived_from_task: <TASK-P1-X-...-or-null>
+---
+
 # Project: [Name]
 
 ## Overview
 [What are we building? Why?]
+
+## Prior work referenced (from corpus search)
+[List of paths to reused/extended CONTRACT.md files, or "none — fresh ground"]
 
 ## Components (Phase 1 - Parallel Proofs)
 
