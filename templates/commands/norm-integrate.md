@@ -25,6 +25,7 @@ PLAN_FILE="$SPEC_DIR/PLAN.md"
 PROOFS_DIR="$SPEC_DIR/proofs"
 TASKS_DIR="$SPEC_DIR/tasks"
 LINEAR_FILE="$SPEC_DIR/linear.yaml"
+MARKER_FILE="$SPEC_DIR/.phase-1.5-complete"
 
 if [[ ! -f "$PLAN_FILE" ]]; then
     echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /norm-plan first."
@@ -42,6 +43,47 @@ done
 if [[ ${#INCOMPLETE[@]} -gt 0 ]]; then
     echo "❌ ERROR: Phase 1 incomplete. Missing CONTRACT.md or TESTING.md for:"
     printf '  - %s\n' "${INCOMPLETE[@]}"
+    exit 1
+fi
+
+# Phase 1.5 gate — Phase 2 must not be planned against an unsynthesized plan.
+# The marker is written by /norm-replan after FEEDBACK is reconciled into PLAN.md.
+if [[ ! -f "$MARKER_FILE" ]]; then
+    echo "❌ ERROR: Phase 1.5 has not been run yet."
+    echo ""
+    echo "  Phase 1 produced FEEDBACK.md files. Before generating Phase 2 tasks,"
+    echo "  those discoveries need to be folded back into PLAN.md (and SCHEMA.md if present)"
+    echo "  so integration is planned against the latest understanding, not the original draft."
+    echo ""
+    echo "  Run: /norm-replan"
+    echo ""
+    echo "  This will synthesize FEEDBACK.md across all proofs, propose plan deltas,"
+    echo "  and write $MARKER_FILE on confirmation."
+    exit 1
+fi
+
+# If FEEDBACK.md is newer than the marker, replan is stale.
+STALE_FEEDBACK=$(find "$PROOFS_DIR" -name FEEDBACK.md -newer "$MARKER_FILE" 2>/dev/null)
+if [[ -n "$STALE_FEEDBACK" ]]; then
+    echo "❌ ERROR: Phase 1.5 marker is stale — these FEEDBACK.md files are newer:"
+    echo "$STALE_FEEDBACK" | sed 's|^|  - |'
+    echo ""
+    echo "  Re-run /norm-replan to fold the new feedback into PLAN.md before integrating."
+    exit 1
+fi
+
+# If PLAN.md was edited after the marker, the synthesis on record is stale too.
+if [[ "$PLAN_FILE" -nt "$MARKER_FILE" ]]; then
+    echo "❌ ERROR: PLAN.md is newer than the Phase 1.5 marker."
+    echo "  Run /norm-replan to refresh the synthesis and the marker."
+    exit 1
+fi
+
+# If SCHEMA.md exists and was edited after the marker, also stale (frozen contract drifted).
+SCHEMA_FILE="$SPEC_DIR/SCHEMA.md"
+if [[ -f "$SCHEMA_FILE" ]] && [[ "$SCHEMA_FILE" -nt "$MARKER_FILE" ]]; then
+    echo "❌ ERROR: SCHEMA.md is newer than the Phase 1.5 marker."
+    echo "  The frozen contract changed after the last replan. Run /norm-replan to re-synthesize."
     exit 1
 fi
 
@@ -63,13 +105,16 @@ fi
 
 ## Task Generation Rules
 
-### CRITICAL: Phase 1.5 First!
+### Phase 1.5 — already enforced by the gate above
 
-**Before generating Phase 2 tasks, review feedback:**
-1. Read all FEEDBACK.md files from Phase 1
-2. Identify any plan changes needed
-3. Update PLAN.md if discoveries warrant adjustments
-4. Document what you learned and how it affects integration
+Phase 1.5 is no longer something this command does inline. It is a **separate command (`/norm-replan`)** and is **enforced** by the marker check in the Setup block — if the marker is missing or stale, this command refuses to run and tells the user to run `/norm-replan`.
+
+By the time you reach this section, you can trust:
+- All FEEDBACK.md files have been synthesized
+- Plan deltas have been reviewed by the user
+- PLAN.md (and SCHEMA.md if applicable) reflect the current understanding
+
+You should still **read** the marker (`$SPEC_DIR/.phase-1.5-complete`) for the digest of what was decided in Phase 1.5 — it tells you which decisions are pinned and which items are explicitly deferred, both of which shape Phase 2 task generation.
 
 ### Integration Task Structure
 

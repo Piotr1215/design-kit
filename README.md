@@ -46,6 +46,9 @@ cd design-kit
 # Start a new feature branch
 git checkout -b feature-auth-improvements
 
+# Lost? Run this any time. It prints where the project stands and the next command.
+/norm-status
+
 # Create master plan
 /norm-plan "Improve API authentication with OAuth2 + rate limiting"
 
@@ -55,10 +58,11 @@ git checkout -b feature-auth-improvements
 # Claude executes all proofs independently
 # Each produces CONTRACT.md + TESTING.md + 100+ test runs
 
-# Review feedback and update plan if needed
-cat .claude/specs/feature-auth-improvements/proofs/*/FEEDBACK.md
+# Phase 1.5 — synthesize FEEDBACK.md across proofs, propose plan/schema deltas,
+# write the marker /norm-integrate gates on. NOT optional.
+/norm-replan
 
-# Generate Phase 2 integration tasks
+# Generate Phase 2 integration tasks (refuses to run without the Phase 1.5 marker)
 /norm-integrate
 
 # Claude integrates proven components with real system
@@ -75,10 +79,13 @@ All tasks run **simultaneously** with zero dependencies:
 - Produces `CONTRACT.md` + `TESTING.md` + 100+ automated test runs
 - **Done when**: All proofs have ≥98% pass rate
 
-#### Phase 1.5: Feedback Loop
-- Review all `FEEDBACK.md` files from proofs
-- Update `PLAN.md` based on discoveries
-- Adjust Phase 2 approach if needed
+#### Phase 1.5: Feedback Loop — peer phase, not optional
+
+`/norm-replan` synthesizes every `FEEDBACK.md` from Phase 1, proposes deltas to `PLAN.md` (and `SCHEMA.md` if you froze a contract), gets your confirmation, and writes a `.phase-1.5-complete` marker.
+
+- `/norm-integrate` **refuses to run** without that marker, and refuses if `PLAN.md` or any `FEEDBACK.md` is newer than the marker
+- This is the most common failure mode of the kit: discoveries from research never propagate to the plan, and Phase 2 gets generated against an outdated draft
+- Re-run `/norm-replan` any time a Phase 1 proof is refined — the gate is timestamp-aware
 
 #### Phase 2: Integration
 Connect proven components to actual system:
@@ -122,11 +129,15 @@ Multiple repos can point at the same project — that's the cross-repo coordinat
 
 | Command | Purpose | Output |
 |---------|---------|--------|
+| `/norm-status` | **Where am I?** Read-only state inspection + next-command suggestion | Status block, no edits |
 | `/norm-plan` | Create master plan with component breakdown | `PLAN.md` with phases |
 | `/norm-research` | Generate Phase 1 parallel proof tasks | Independent `TASK-P1-*.md` files |
-| `/norm-integrate` | Generate Phase 2 integration tasks | Integration `TASK-P2-*.md` files |
+| `/norm-replan` | **Phase 1.5** — synthesize FEEDBACK across proofs, propose plan/schema deltas | Updated `PLAN.md` + `.phase-1.5-complete` marker |
+| `/norm-integrate` | Generate Phase 2 integration tasks (gated on Phase 1.5 marker) | Integration `TASK-P2-*.md` files |
 | `/norm-tasks` | List all tasks with paths and status | Organized list of all tasks |
 | `/norm-task [ID]` | View/work on specific task (e.g., `/norm-task A`) | Full task content with context |
+
+**If you forget which command to run next:** `/norm-status`. It inspects the project, prints the state, and recommends the next command.
 
 ## Core Principles
 
