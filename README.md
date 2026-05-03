@@ -42,21 +42,21 @@ That's it. No clone, no install script. Updates ship through the marketplace.
 
 ```
 # Lost? This always tells you the next command to run.
-/design-kit:status
+/design-kit:dd-status
 
 # Create a master plan (binds this repo to a project slug under ~/.claude/specs/)
-/design-kit:plan "Improve API authentication with OAuth2 + rate limiting"
+/design-kit:dd-plan "Improve API authentication with OAuth2 + rate limiting"
 
 # Generate Phase 1 parallel proof tasks (one per component)
-/design-kit:research-tasks
+/design-kit:dd-research-tasks
 
 # Agents execute proofs independently — each produces CONTRACT.md + TESTING.md + FEEDBACK.md
 
 # Phase 1.5 — synthesize FEEDBACK across proofs into PLAN deltas. NOT optional.
-/design-kit:replan-after-research
+/design-kit:dd-replan-after-research
 
 # Generate Phase 2 integration tasks (refuses to run without the Phase 1.5 marker)
-/design-kit:integration-tasks
+/design-kit:dd-integration-tasks
 
 # Agents integrate proven components with the real system
 ```
@@ -74,11 +74,11 @@ All tasks run **simultaneously** with zero dependencies. Each proves ONE compone
 
 ### Phase 1.5 — feedback loop (peer phase, not optional)
 
-`/design-kit:replan-after-research` synthesizes every `FEEDBACK.md` from Phase 1, proposes deltas to `PLAN.md` (and `SCHEMA.md` if you froze a contract), gets your confirmation, and writes `.phase-1.5-complete`.
+`/design-kit:dd-replan-after-research` synthesizes every `FEEDBACK.md` from Phase 1, proposes deltas to `PLAN.md` (and `SCHEMA.md` if you froze a contract), gets your confirmation, and writes `.phase-1.5-complete`.
 
-- `/design-kit:integration-tasks` **refuses to run** without that marker, and refuses if `PLAN.md`, `SCHEMA.md`, or any `FEEDBACK.md` is newer than the marker.
+- `/design-kit:dd-integration-tasks` **refuses to run** without that marker, and refuses if `PLAN.md`, `SCHEMA.md`, or any `FEEDBACK.md` is newer than the marker.
 - Most common failure mode of the kit: discoveries from research never propagate to the plan, and Phase 2 gets generated against a stale draft. The gate prevents this.
-- Re-run `/design-kit:replan-after-research` any time a Phase 1 proof is refined.
+- Re-run `/design-kit:dd-replan-after-research` any time a Phase 1 proof is refined.
 
 ### Phase 2 — integration
 
@@ -93,7 +93,7 @@ Plans live globally, not per-repo. Multiple repos and branches can share one pro
 └── <slug>/
     ├── PLAN.md              # master plan
     ├── linear.yaml          # (optional) Linear binding metadata
-    ├── .phase-1.5-complete  # gate marker, written by /design-kit:replan-after-research
+    ├── .phase-1.5-complete  # gate marker, written by /design-kit:dd-replan-after-research
     ├── proofs/              # Phase 1 proof-of-concepts
     │   └── <component>/
     │       ├── run.sh
@@ -120,19 +120,19 @@ To switch the active project for the current repo, re-run the same command with 
 
 ### Multi-spec discovery
 
-Run `/design-kit:status all` to list every spec under `~/.claude/specs/` with phase + last-touched timestamp. Useful when you have multiple projects in flight and need to remember what's where.
+Run `/design-kit:dd-status all` to list every spec under `~/.claude/specs/` with phase + last-touched timestamp. Useful when you have multiple projects in flight and need to remember what's where.
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/design-kit:status` | Where am I? Read-only state inspection. Accepts free-form args: empty (current project), `all` (all projects), `tasks` (list tasks), task ID (view one task). |
-| `/design-kit:plan` | Create master plan with component breakdown. Binds the repo to a project slug. |
-| `/design-kit:research-tasks` | Generate Phase 1 parallel proof tasks (`TASK-P1-*.md`). |
-| `/design-kit:replan-after-research` | Phase 1.5 — synthesize FEEDBACK across proofs, propose plan/schema deltas, write the marker. |
-| `/design-kit:integration-tasks` | Generate Phase 2 integration tasks (`TASK-P2-*.md`). Gated on the Phase 1.5 marker. |
+| `/design-kit:dd-status` | Where am I? Read-only state inspection. Accepts free-form args: empty (current project), `all` (all projects), `tasks` (list tasks), task ID (view one task). |
+| `/design-kit:dd-plan` | Create master plan with component breakdown. Binds the repo to a project slug. |
+| `/design-kit:dd-research-tasks` | Generate Phase 1 parallel proof tasks (`TASK-P1-*.md`). |
+| `/design-kit:dd-replan-after-research` | Phase 1.5 — synthesize FEEDBACK across proofs, propose plan/schema deltas, write the marker. |
+| `/design-kit:dd-integration-tasks` | Generate Phase 2 integration tasks (`TASK-P2-*.md`). Gated on the Phase 1.5 marker. |
 
-If you forget which command to run next: `/design-kit:status`. It inspects the project, prints the state, and recommends the next command.
+If you forget which command to run next: `/design-kit:dd-status`. It inspects the project, prints the state, and recommends the next command.
 
 ## Core principles
 
@@ -148,11 +148,11 @@ If your project lives in a Linear workspace, the kit can mirror plans and tasks 
 
 How it works:
 
-1. `/design-kit:plan` (when bound) creates a Linear document attached to the project, captures project + milestone IDs in `~/.claude/specs/<slug>/linear.yaml`
-2. `/design-kit:research-tasks` mirrors each Phase 1 task as a Linear issue in `research_milestone` (default M1)
-3. `/design-kit:integration-tasks` mirrors each Phase 2 task in `integrate_milestone` (default M3)
+1. `/design-kit:dd-plan` (when bound) creates a Linear document attached to the project, captures project + milestone IDs in `~/.claude/specs/<slug>/linear.yaml`
+2. `/design-kit:dd-research-tasks` mirrors each Phase 1 task as a Linear issue in `research_milestone` (default M1)
+3. `/design-kit:dd-integration-tasks` mirrors each Phase 2 task in `integrate_milestone` (default M3)
 
-Each Linear issue includes a header pointing back to the plan document and the local task file. To skip Linear sync for a particular plan, pass `LINEAR_SKIP=1` when running `/design-kit:plan`.
+Each Linear issue includes a header pointing back to the plan document and the local task file. To skip Linear sync for a particular plan, pass `LINEAR_SKIP=1` when running `/design-kit:dd-plan`.
 
 See [linear-binding.md](templates/linear-binding.md) for the full pattern.
 

@@ -1,5 +1,5 @@
 ---
-name: integration-tasks
+name: dd-integration-tasks
 description: "Phase 2 — generate integration tasks against the actual system. Gated on the Phase 1.5 marker."
 ---
 
@@ -17,7 +17,7 @@ SPEC_DIR=$(echo "$output" | awk '/^SpecDir:/ {print $2}')
 SLUG=$(echo "$output" | awk '/^Slug:/ {print $2}')
 
 if [[ -z "$SPEC_DIR" ]]; then
-    echo "❌ ERROR: No project bound to this repo. Run /design-kit:plan first to bind."
+    echo "❌ ERROR: No project bound to this repo. Run /design-kit:dd-plan first to bind."
     exit 1
 fi
 
@@ -28,7 +28,7 @@ LINEAR_FILE="$SPEC_DIR/linear.yaml"
 MARKER_FILE="$SPEC_DIR/.phase-1.5-complete"
 
 if [[ ! -f "$PLAN_FILE" ]]; then
-    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /design-kit:plan first."
+    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /design-kit:dd-plan first."
     exit 1
 fi
 
@@ -47,7 +47,7 @@ if [[ ${#INCOMPLETE[@]} -gt 0 ]]; then
 fi
 
 # Phase 1.5 gate — Phase 2 must not be planned against an unsynthesized plan.
-# The marker is written by /design-kit:replan-after-research after FEEDBACK is reconciled into PLAN.md.
+# The marker is written by /design-kit:dd-replan-after-research after FEEDBACK is reconciled into PLAN.md.
 if [[ ! -f "$MARKER_FILE" ]]; then
     echo "❌ ERROR: Phase 1.5 has not been run yet."
     echo ""
@@ -55,7 +55,7 @@ if [[ ! -f "$MARKER_FILE" ]]; then
     echo "  those discoveries need to be folded back into PLAN.md (and SCHEMA.md if present)"
     echo "  so integration is planned against the latest understanding, not the original draft."
     echo ""
-    echo "  Run: /design-kit:replan-after-research"
+    echo "  Run: /design-kit:dd-replan-after-research"
     echo ""
     echo "  This will synthesize FEEDBACK.md across all proofs, propose plan deltas,"
     echo "  and write $MARKER_FILE on confirmation."
@@ -68,14 +68,14 @@ if [[ -n "$STALE_FEEDBACK" ]]; then
     echo "❌ ERROR: Phase 1.5 marker is stale — these FEEDBACK.md files are newer:"
     echo "$STALE_FEEDBACK" | sed 's|^|  - |'
     echo ""
-    echo "  Re-run /design-kit:replan-after-research to fold the new feedback into PLAN.md before integrating."
+    echo "  Re-run /design-kit:dd-replan-after-research to fold the new feedback into PLAN.md before integrating."
     exit 1
 fi
 
 # If PLAN.md was edited after the marker, the synthesis on record is stale too.
 if [[ "$PLAN_FILE" -nt "$MARKER_FILE" ]]; then
     echo "❌ ERROR: PLAN.md is newer than the Phase 1.5 marker."
-    echo "  Run /design-kit:replan-after-research to refresh the synthesis and the marker."
+    echo "  Run /design-kit:dd-replan-after-research to refresh the synthesis and the marker."
     exit 1
 fi
 
@@ -83,7 +83,7 @@ fi
 SCHEMA_FILE="$SPEC_DIR/SCHEMA.md"
 if [[ -f "$SCHEMA_FILE" ]] && [[ "$SCHEMA_FILE" -nt "$MARKER_FILE" ]]; then
     echo "❌ ERROR: SCHEMA.md is newer than the Phase 1.5 marker."
-    echo "  The frozen contract changed after the last replan. Run /design-kit:replan-after-research to re-synthesize."
+    echo "  The frozen contract changed after the last replan. Run /design-kit:dd-replan-after-research to re-synthesize."
     exit 1
 fi
 
@@ -107,7 +107,7 @@ fi
 
 ### Phase 1.5 — already enforced by the gate above
 
-Phase 1.5 is no longer something this command does inline. It is a **separate command (`/design-kit:replan-after-research`)** and is **enforced** by the marker check in the Setup block — if the marker is missing or stale, this command refuses to run and tells the user to run it.
+Phase 1.5 is no longer something this command does inline. It is a **separate command (`/design-kit:dd-replan-after-research`)** and is **enforced** by the marker check in the Setup block — if the marker is missing or stale, this command refuses to run and tells the user to run it.
 
 By the time you reach this section, you can trust:
 - All FEEDBACK.md files have been synthesized
@@ -271,11 +271,11 @@ If multiple tasks modify the same files:
 
 ## Linear Sync (if linear.yaml exists)
 
-Mirror each TASK-P2-*.md as a Linear issue in the `integrate_milestone`. Same mechanism as `/design-kit:research-tasks` but the target milestone is read from `linear.yaml` `integrate_milestone` (default M3).
+Mirror each TASK-P2-*.md as a Linear issue in the `integrate_milestone`. Same mechanism as `/design-kit:dd-research-tasks` but the target milestone is read from `linear.yaml` `integrate_milestone` (default M3).
 
 ### Detection, MCP requirement, idempotency
 
-Identical to `/design-kit:research-tasks` — see that command for details. Quick recap:
+Identical to `/design-kit:dd-research-tasks` — see that command for details. Quick recap:
 
 - Detect: `$SPEC_DIR/linear.yaml` present
 - MCP unreachable → flag clearly, do not silently skip

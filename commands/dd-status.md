@@ -1,5 +1,5 @@
 ---
-name: status
+name: dd-status
 description: "Read-only state inspection: current project, all projects, task list, or task details. Suggests the next command."
 ---
 
@@ -36,14 +36,14 @@ State detection — figure out where the project stands:
 
 | State | Detected by | Next command |
 |-------|-------------|--------------|
-| **unbound** | No `<repo>/.claude/current-project` pointer | `/design-kit:plan "<idea>"` |
-| **bound, no plan** | Pointer exists, no `$SPEC_DIR/PLAN.md` | `/design-kit:plan` |
-| **plan, no tasks** | `PLAN.md` exists, `$SPEC_DIR/tasks/` empty | `/design-kit:research-tasks` |
+| **unbound** | No `<repo>/.claude/current-project` pointer | `/design-kit:dd-plan "<idea>"` |
+| **bound, no plan** | Pointer exists, no `$SPEC_DIR/PLAN.md` | `/design-kit:dd-plan` |
+| **plan, no tasks** | `PLAN.md` exists, `$SPEC_DIR/tasks/` empty | `/design-kit:dd-research-tasks` |
 | **tasks, no proofs** | TASK-P1-* files exist, `$SPEC_DIR/proofs/` empty or no CONTRACT.md | execute Phase 1 (run agents on `TASK-P1-*` files) |
 | **phase 1 in flight** | Some proofs have CONTRACT.md, some don't | finish remaining Phase 1 proofs |
-| **phase 1 done, replan needed** | All proofs have CONTRACT.md+TESTING.md, no `.phase-1.5-complete` marker | `/design-kit:replan-after-research` |
-| **phase 1.5 stale** | Marker exists but a `FEEDBACK.md`, `PLAN.md`, or `SCHEMA.md` is newer | `/design-kit:replan-after-research` (re-synthesize) |
-| **phase 1.5 done, no P2 tasks** | Marker fresh, no `TASK-P2-*` files | `/design-kit:integration-tasks` |
+| **phase 1 done, replan needed** | All proofs have CONTRACT.md+TESTING.md, no `.phase-1.5-complete` marker | `/design-kit:dd-replan-after-research` |
+| **phase 1.5 stale** | Marker exists but a `FEEDBACK.md`, `PLAN.md`, or `SCHEMA.md` is newer | `/design-kit:dd-replan-after-research` (re-synthesize) |
+| **phase 1.5 done, no P2 tasks** | Marker fresh, no `TASK-P2-*` files | `/design-kit:dd-integration-tasks` |
 | **phase 2 in flight** | TASK-P2-* files exist | execute Phase 2 |
 | **phase 2 done** | All P2 tasks have integration evidence (subjective — surface counts, let user decide) | wrap up / new project |
 
@@ -83,7 +83,7 @@ If unbound, skip every project-specific row and just print the unbound block + s
 
 ### Stale detection
 
-Mirror the `/design-kit:integration-tasks` gate: marker missing, or any `FEEDBACK.md` / `PLAN.md` / `SCHEMA.md` newer than the marker.
+Mirror the `/design-kit:dd-integration-tasks` gate: marker missing, or any `FEEDBACK.md` / `PLAN.md` / `SCHEMA.md` newer than the marker.
 
 ## Mode: multi-project
 
@@ -110,7 +110,7 @@ Tip: To bind this repo to one of the projects above, write the slug to its point
 
      mkdir -p .claude && echo "<slug>" > .claude/current-project
 
-Or run `/design-kit:plan "<idea>"` to create a new project from scratch.
+Or run `/design-kit:dd-plan "<idea>"` to create a new project from scratch.
 ```
 
 `last-touched` = newest mtime among PLAN.md, marker, any TASK file. Best-effort.
@@ -120,7 +120,7 @@ Or run `/design-kit:plan "<idea>"` to create a new project from scratch.
 User wants every TASK file in the bound project. This was the old `/norm-tasks` behavior.
 
 ```bash
-[[ -z "$SPEC_DIR" ]] && { echo "No project bound. Run /design-kit:plan first."; exit 0; }
+[[ -z "$SPEC_DIR" ]] && { echo "No project bound. Run /design-kit:dd-plan first."; exit 0; }
 find "$SPEC_DIR/tasks" -maxdepth 1 -name 'TASK-*.md' | sort
 ```
 
@@ -163,7 +163,7 @@ Then read the file and print:
 ## Anti-Patterns
 
 ❌ Running the recommended command automatically — this is a guidance command, not an executor
-❌ Editing files (this includes "fixing" a stale marker — that's `/design-kit:replan-after-research`'s job)
+❌ Editing files (this includes "fixing" a stale marker — that's `/design-kit:dd-replan-after-research`'s job)
 ❌ Hiding partial state behind a single status word — list per-proof rows so the user sees what's actually missing
 ❌ Inventing tasks that don't exist on disk in task-list / task-view modes
 

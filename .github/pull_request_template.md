@@ -20,11 +20,11 @@ List the specific changes made in this PR:
 ## Testing
 Describe how you tested these changes:
 - [ ] Installed via `/plugin install design-kit@aiverse`
-- [ ] Tested `/design-kit:plan` command
-- [ ] Tested `/design-kit:research-tasks` command
-- [ ] Tested `/design-kit:replan-after-research` command
-- [ ] Tested `/design-kit:integration-tasks` command
-- [ ] Tested `/design-kit:status` command
+- [ ] Tested `/design-kit:dd-plan` command
+- [ ] Tested `/design-kit:dd-research-tasks` command
+- [ ] Tested `/design-kit:dd-replan-after-research` command
+- [ ] Tested `/design-kit:dd-integration-tasks` command
+- [ ] Tested `/design-kit:dd-status` command
 - [ ] Tested with a real workflow
 - [ ] Updated/added documentation
 

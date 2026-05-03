@@ -334,29 +334,29 @@ Switching branches in any repo doesn't change the workspace — the pointer stay
 
 ## Commands
 
-### /design-kit:plan
+### /design-kit:dd-plan
 
 Creates master plan with component breakdown:
 ```bash
-/design-kit:plan "Build REST API with OAuth2 authentication and rate limiting"
+/design-kit:dd-plan "Build REST API with OAuth2 authentication and rate limiting"
 ```
 
 Produces: `~/.claude/specs/{slug}/PLAN.md`
 
-### /design-kit:research-tasks
+### /design-kit:dd-research-tasks
 
 Generates Phase 1 parallel proof tasks:
 ```bash
-/design-kit:research-tasks
+/design-kit:dd-research-tasks
 ```
 
 Creates: `~/.claude/specs/{slug}/tasks/TASK-P1-*.md` files
 
-### /design-kit:integration-tasks
+### /design-kit:dd-integration-tasks
 
 Generates Phase 2 integration tasks:
 ```bash
-/design-kit:integration-tasks
+/design-kit:dd-integration-tasks
 ```
 
 Creates: `~/.claude/specs/{slug}/tasks/TASK-P2-*.md` files
@@ -477,9 +477,9 @@ TESTING.md: "Run ./run.sh - automated harness validates 127 test cases"
 
 ## Optional: Linear Project Binding
 
-The kit can mirror plans, proof tasks, and integration tasks to a Linear project. Local files remain the toolchain's source — `/design-kit:research-tasks` and `/design-kit:integration-tasks` still read and write the local `~/.claude/specs/<slug>/` tree. Linear is an additional source/target for the same information so distributed teams can see and assign work without local-machine access.
+The kit can mirror plans, proof tasks, and integration tasks to a Linear project. Local files remain the toolchain's source — `/design-kit:dd-research-tasks` and `/design-kit:dd-integration-tasks` still read and write the local `~/.claude/specs/<slug>/` tree. Linear is an additional source/target for the same information so distributed teams can see and assign work without local-machine access.
 
-A `~/.claude/specs/<slug>/linear.yaml` sidecar captures project / document / milestone IDs after `/design-kit:plan` runs with binding enabled. Each subsequent command checks for the sidecar and mirrors writes to Linear if present.
+A `~/.claude/specs/<slug>/linear.yaml` sidecar captures project / document / milestone IDs after `/design-kit:dd-plan` runs with binding enabled. Each subsequent command checks for the sidecar and mirrors writes to Linear if present.
 
 See `templates/linear-binding.md` for the schema, lifecycle, and issue body templates.
 

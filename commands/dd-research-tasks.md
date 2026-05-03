@@ -1,5 +1,5 @@
 ---
-name: research-tasks
+name: dd-research-tasks
 description: "Generate Phase 1 parallel proof-of-concept tasks (one per component, 100% independent, test-driven)"
 ---
 
@@ -14,7 +14,7 @@ SPEC_DIR=$(echo "$output" | awk '/^SpecDir:/ {print $2}')
 SLUG=$(echo "$output" | awk '/^Slug:/ {print $2}')
 
 if [[ -z "$SPEC_DIR" ]]; then
-    echo "❌ ERROR: No project bound to this repo. Run /design-kit:plan first to bind."
+    echo "❌ ERROR: No project bound to this repo. Run /design-kit:dd-plan first to bind."
     exit 1
 fi
 
@@ -23,7 +23,7 @@ TASKS_DIR="$SPEC_DIR/tasks"
 LINEAR_FILE="$SPEC_DIR/linear.yaml"
 
 if [[ ! -f "$PLAN_FILE" ]]; then
-    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /design-kit:plan first."
+    echo "❌ ERROR: PLAN.md not found at $PLAN_FILE. Run /design-kit:dd-plan first."
     exit 1
 fi
 
@@ -208,7 +208,7 @@ If `linear.yaml` is absent, skip Linear sync entirely (local-only mode).
 Requires `mcp__linear-server__*`. If unreachable:
 ```
 ❌ Linear MCP not reachable. Local tasks were written, but Linear issues were NOT created.
-   Fix MCP and re-run /design-kit:research-tasks.
+   Fix MCP and re-run /design-kit:dd-research-tasks.
 ```
 Do not silently continue.
 
@@ -269,12 +269,12 @@ In `~/.claude/specs/<slug>/proofs/<component>/`:
 
 ### Idempotency
 
-Re-running `/design-kit:research-tasks` on an already-bound plan must not create duplicate Linear issues. Use `issue_map` to detect existing issues and update them in place via `save_issue` with `id`.
+Re-running `/design-kit:dd-research-tasks` on an already-bound plan must not create duplicate Linear issues. Use `issue_map` to detect existing issues and update them in place via `save_issue` with `id`.
 
 ## Next Steps
 
 After tasks are generated:
 - Agent(s) execute Phase 1 tasks independently (locally and/or pulling Linear issues)
 - Each produces CONTRACT.md + TESTING.md + sufficient test runs to validate requirements
-- Run `/design-kit:replan-after-research` to fold FEEDBACK into PLAN
-- Then run `/design-kit:integration-tasks` for Phase 2
+- Run `/design-kit:dd-replan-after-research` to fold FEEDBACK into PLAN
+- Then run `/design-kit:dd-integration-tasks` for Phase 2

@@ -1,5 +1,5 @@
 ---
-name: plan
+name: dd-plan
 description: "Create a master implementation plan: components, three-phase breakdown, optional Linear binding"
 ---
 
@@ -140,7 +140,7 @@ Phase 2 complete when:
 
 ## Linear Project Binding (after PLAN.md is written)
 
-The kit can mirror the plan to a Linear project so the team sees the same source of truth. Local files remain the working artifacts (`/design-kit:research-tasks`, `/design-kit:integration-tasks` read from disk); Linear is the visible mirror that agents can also pull from when working off a Linear issue.
+The kit can mirror the plan to a Linear project so the team sees the same source of truth. Local files remain the working artifacts (`/design-kit:dd-research-tasks`, `/design-kit:dd-integration-tasks` read from disk); Linear is the visible mirror that agents can also pull from when working off a Linear issue.
 
 ### Detection (in order)
 
@@ -167,9 +167,9 @@ The kit can mirror the plan to a Linear project so the team sees the same source
      M1: <uuid>                # name → id mapping
      M2: <uuid>
      M3: <uuid>
-   research_milestone: M1      # /design-kit:research-tasks issues land here
-   integrate_milestone: M3     # /design-kit:integration-tasks issues land here
-   issue_map: {}               # filled in by /design-kit:research-tasks and /design-kit:integration-tasks
+   research_milestone: M1      # /design-kit:dd-research-tasks issues land here
+   integrate_milestone: M3     # /design-kit:dd-integration-tasks issues land here
+   issue_map: {}               # filled in by /design-kit:dd-research-tasks and /design-kit:dd-integration-tasks
    ```
 4. Echo: `Plan synced to Linear: <plan_doc_url>`
 
@@ -189,7 +189,7 @@ Exit non-zero so the user notices.
 
 If user passes `LINEAR_SKIP=1` or answers "skip": work local-only. PLAN.md still written. No sidecar created.
 
-### What gets put inside a Linear issue (referenced from `/design-kit:research-tasks` and `/design-kit:integration-tasks`)
+### What gets put inside a Linear issue (referenced from `/design-kit:dd-research-tasks` and `/design-kit:dd-integration-tasks`)
 
 Every Linear issue created by the toolchain must include this header:
 
@@ -210,7 +210,7 @@ Every Linear issue created by the toolchain must include this header:
 ## Next Steps
 
 After PLAN.md is created and (optionally) Linear-bound:
-- Run `/design-kit:research-tasks` to generate Phase 1 parallel proof tasks
+- Run `/design-kit:dd-research-tasks` to generate Phase 1 parallel proof tasks
 - Complete all Phase 1 tasks independently
-- Run `/design-kit:replan-after-research` to fold FEEDBACK into PLAN
-- Run `/design-kit:integration-tasks` to generate Phase 2 integration tasks
+- Run `/design-kit:dd-replan-after-research` to fold FEEDBACK into PLAN
+- Run `/design-kit:dd-integration-tasks` to generate Phase 2 integration tasks

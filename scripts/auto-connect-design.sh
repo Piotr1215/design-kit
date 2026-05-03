@@ -16,7 +16,7 @@ set -euo pipefail
 # Modes
 # -----
 #   auto-connect-design.sh                 # resolve + ensure subdirs, print status
-#   auto-connect-design.sh --init <slug>   # bootstrap a new project (called by /design-kit:plan)
+#   auto-connect-design.sh --init <slug>   # bootstrap a new project (called by /design-kit:dd-plan)
 #
 # Outputs (resolve mode):
 #   Slug: <slug>
@@ -69,7 +69,7 @@ esac
 # Default: resolve and ensure
 if [[ ! -f "$LOCAL_POINTER" ]]; then
   echo "⚠ No project bound to this repo (no $LOCAL_POINTER)."
-  echo "  Run /design-kit:plan to create a new project, or"
+  echo "  Run /design-kit:dd-plan to create a new project, or"
   echo "  $(basename "$0") --init <slug>   # bind this repo to an existing global project."
   exit 0
 fi
